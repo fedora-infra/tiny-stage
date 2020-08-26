@@ -1,0 +1,8 @@
+---
+- hosts: freeipa
+  become: true
+  become_method: sudo
+  roles:
+    - freeipa
+
+  

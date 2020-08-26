@@ -1,0 +1,6 @@
+---
+- hosts: fasjson
+  become: true
+  become_method: sudo
+  roles:
+    - fasjson

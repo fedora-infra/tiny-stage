@@ -1,0 +1,136 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - ipa-client
+      - httpd
+      - mod_auth_gssapi
+      - mod_session
+      - python3-mod_wsgi
+      - python3-dns
+      - python3-flask
+      - python3-gssapi
+      - python3-ldap
+      - python3-pip
+      - python3-wheel
+      - python3-devel
+      - openldap-devel
+      - krb5-devel
+      - poetry
+      - python3-tox
+      - "@Development Tools"
+      - vim
+      - tmux
+    state: present
+
+- name: Allow apache to see /srv
+  sefcontext:
+    target: "/srv(/.*)?"
+    setype: httpd_sys_content_t
+
+- pip:
+    name: fasjson
+
+- pip:
+    name: flask
+
+- name: Install the .bashrc
+  copy:
+    src: .bashrc
+    dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Copy wsgi
+  copy:
+    src: fasjson.wsgi
+    dest: /srv/fasjson.wsgi
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Uninstall any old clients
+  shell: ipa-client-install --uninstall --unattended
+  ignore_errors: yes
+
+- name: Enroll system as IPA client
+  shell: ipa-client-install --hostname fasjson.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w adminPassw0rd! -U -N --force-join
+
+- name: Copy the service setup script
+  copy:
+    src: setup-fasjson-service.sh
+    dest: /srv/setup-fasjson-service.sh
+    mode: 0755
+
+- name: kinit
+  shell: echo "adminPassw0rd!" | kinit admin@TINYSTAGE.TEST
+
+- name: Create the service in IPA
+  command: bash /srv/setup-fasjson-service.sh
+
+- name: Get service keytab for HTTPd
+  shell: ipa-getkeytab -p HTTP/fasjson.tinystage.test -k /var/lib/gssproxy/httpd.keytab
+  args:
+    creates: /var/lib/gssproxy/httpd.keytab
+
+- name: Set the correct permissions on keytab
+  file:
+    path: /var/lib/gssproxy/httpd.keytab
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Copy gssproxy conf
+  copy:
+    src: config/gssproxy-fasjson.conf
+    dest: /etc/gssproxy/80-fasjson.conf
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Enable and restart GSSProxy
+  systemd:
+    state: restarted
+    name: gssproxy
+    enabled: yes
+    daemon_reload: yes
+
+- name: Configure temporary files
+  copy:
+    src: config/tmpfiles-fasjson.conf
+    dest: /etc/tmpfiles.d/fasjson.conf
+
+- name: Create temporary file
+  shell: systemd-tmpfiles --create
+
+- name: Tune SELinux Policy
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_connect_ldap
+    - httpd_can_network_connect
+    - httpd_use_fusefs
+
+- name: Create Apache service
+  file:
+    path: /etc/systemd/system/httpd.service.d
+    state: directory
+    mode: 0755
+
+- name: Copy configs for Apache
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - src: "config/systemd-httpd-service-fasjson.conf"
+      dest: "/etc/systemd/system/httpd.service.d/fasjson.conf"
+    - src: "config/httpd-fasjson.conf"
+      dest: "/etc/httpd/conf.d/fasjson.conf"
+
+- name: Enable and restart Apache
+  systemd:
+    state: restarted
+    name: httpd
+    enabled: yes
+    daemon_reload: yes
