@@ -21,13 +21,13 @@
     group: vagrant
 
 - name: Enroll system as IPA client
-  shell: ipa-client-install --hostname ipsilon.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w adminPassw0rd! -U -N --force-join
+  shell: ipa-client-install --hostname ipsilon.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
 
 - name: kinit
-  shell: echo "adminPassw0rd!" | kinit admin@TINYSTAGE.TEST
+  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 - name: install ipsilon
-  shell: ipsilon-server-install --ipa yes --admin-user admin@TINYSTAGE.TEST --openidc yes --openid yes --saml2 yes
+  shell: ipsilon-server-install --ipa yes --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --openidc yes --openid yes --saml2 yes
 
 - name: Enable and restart Apache
   systemd:

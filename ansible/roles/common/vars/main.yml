@@ -1,0 +1,5 @@
+---
+ipa_admin_user: admin
+ipa_admin_password: adminPassw0rd!
+krb_master_password: adminPassw0rd!
+krb_realm: TINYSTAGE.TEST
