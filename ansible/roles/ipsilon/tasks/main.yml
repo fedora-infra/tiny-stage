@@ -4,6 +4,9 @@
     name:
       - ipsilon
       - ipsilon-tools-ipa
+      - ipsilon-saml2
+      - ipsilon-openid
+      - ipsilon-openidc
       - httpd
       - krb5-workstation
 
@@ -24,7 +27,7 @@
   shell: echo "adminPassw0rd!" | kinit admin@TINYSTAGE.TEST
 
 - name: install ipsilon
-  shell: ipsilon-server-install --ipa yes --admin-user admin@TINYSTAGE.TEST
+  shell: ipsilon-server-install --ipa yes --admin-user admin@TINYSTAGE.TEST --openidc yes --openid yes --saml2 yes
 
 - name: Enable and restart Apache
   systemd:
