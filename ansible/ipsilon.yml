@@ -1,0 +1,8 @@
+---
+- hosts: ipsilon
+  become: true
+  become_method: sudo
+  roles:
+    - ipsilon
+
+

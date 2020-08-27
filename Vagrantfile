@@ -23,7 +23,7 @@ Vagrant.configure(2) do |config|
     freeipa.vm.provision "shell", inline: "sudo sed -i '1d' /etc/hosts"
 
     freeipa.vm.provision "ansible" do |ansible|
-      ansible.playbook = "ansible/freeipa.yml"
+      ansible.playbook = "devel/ansible/freeipa.yml"
     end
   end
 
@@ -39,7 +39,23 @@ Vagrant.configure(2) do |config|
     end
 
     fasjson.vm.provision "ansible" do |ansible|
-      ansible.playbook = "ansible/fasjson.yml"
+      ansible.playbook = "devel/ansible/fasjson.yml"
+    end
+  end
+
+  config.vm.define "ipsilon" do |ipsilon|
+    ipsilon.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/32/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-32-1.6.x86_64.vagrant-libvirt.box"
+    ipsilon.vm.box = "f32-cloud-libvirt"
+    ipsilon.vm.hostname = "ipsilon.tinystage.test"
+    ipsilon.vm.synced_folder ".", "/vagrant", disabled: true
+
+    ipsilon.vm.provider :libvirt do |libvirt|
+      libvirt.cpus = 2
+      libvirt.memory = 2048
+    end
+
+    ipsilon.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/ipsilon.yml"
     end
   end
 

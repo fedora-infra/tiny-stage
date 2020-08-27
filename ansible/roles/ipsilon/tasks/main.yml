@@ -1,0 +1,35 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - ipsilon
+      - ipsilon-tools-ipa
+      - httpd
+      - krb5-workstation
+
+    state: present
+
+- name: Install the .bashrc
+  copy:
+    src: .bashrc
+    dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Enroll system as IPA client
+  shell: ipa-client-install --hostname ipsilon.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w adminPassw0rd! -U -N --force-join
+
+- name: kinit
+  shell: echo "adminPassw0rd!" | kinit admin@TINYSTAGE.TEST
+
+- name: install ipsilon
+  shell: ipsilon-server-install --ipa yes --admin-user admin@TINYSTAGE.TEST
+
+- name: Enable and restart Apache
+  systemd:
+    state: restarted
+    name: httpd
+    enabled: yes
+    daemon_reload: yes
+
