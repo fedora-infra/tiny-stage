@@ -26,6 +26,11 @@
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
+- name: uninstall existing ipsilon server
+  shell: test -f /var/log/ipsilon-install.log && ipsilon-server-install --uninstall
+  ignore_errors: yes
+  changed_when: "False"
+
 - name: install ipsilon
   shell: ipsilon-server-install --ipa yes --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --openidc yes --openid yes --saml2 yes
 
