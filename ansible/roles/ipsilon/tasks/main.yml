@@ -32,7 +32,7 @@
   changed_when: "False"
 
 - name: install ipsilon
-  shell: ipsilon-server-install --ipa yes --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --openidc yes --openid yes --saml2 yes
+  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --ipa yes --openidc yes --openid yes --saml2 yes
 
 - name: Enable and restart Apache
   systemd:
