@@ -23,7 +23,7 @@ Vagrant.configure(2) do |config|
     freeipa.vm.provision "shell", inline: "sudo sed -i '1d' /etc/hosts"
 
     freeipa.vm.provision "ansible" do |ansible|
-      ansible.playbook = "devel/ansible/freeipa.yml"
+      ansible.playbook = "ansible/freeipa.yml"
     end
   end
 
@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
     end
 
     fasjson.vm.provision "ansible" do |ansible|
-      ansible.playbook = "devel/ansible/fasjson.yml"
+      ansible.playbook = "ansible/fasjson.yml"
     end
   end
 
