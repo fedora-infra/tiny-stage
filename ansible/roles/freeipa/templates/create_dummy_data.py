@@ -11,7 +11,7 @@ fake.seed_instance(0)
 ipa = python_freeipa.ClientLegacy(
     host="ipa.example.test", verify_ssl="/etc/ipa/ca.crt"
 )
-ipa.login("admin", "adminPassw0rd!")
+ipa.login("{{ ipa_admin_user }}", "{{ ipa_admin_password }}")
 
 
 # create a developers fasgroup

@@ -14,7 +14,7 @@
   ignore_errors: yes
 
 - name: install freeipa server
-  shell: umask 022; ipa-server-install -a adminPassw0rd! --hostname=ipa.tinystage.test -r TINYSTAGE.TEST -p adminPassw0rd! -n tinystage.test -U
+  shell: umask 022; ipa-server-install -a {{ ipa_admin_password }} --hostname=ipa.tinystage.test -r {{ krb_realm }} -p {{ krb_master_password }} -n tinystage.test -U
 
 - name: get freeipa-fas
   git:
@@ -36,7 +36,7 @@
   shell: mv /var/lib/ipa/backup/ipa-full* /var/lib/ipa/backup/backup-clean
 
 - name: Install the .bashrc
-  copy:
+  template:
       src: .bashrc
       dest: /home/vagrant/.bashrc
       mode: 0644
@@ -44,7 +44,7 @@
       group: vagrant
 
 - name: copy the create data script
-  copy:
+  template:
       src: create_dummy_data.py
       dest: /home/vagrant/create_dummy_data.py
       mode: 0644

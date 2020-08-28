@@ -55,16 +55,16 @@
   ignore_errors: yes
 
 - name: Enroll system as IPA client
-  shell: ipa-client-install --hostname fasjson.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w adminPassw0rd! -U -N --force-join
+  shell: ipa-client-install --hostname fasjson.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
 
 - name: Copy the service setup script
-  copy:
+  template:
     src: setup-fasjson-service.sh
     dest: /srv/setup-fasjson-service.sh
     mode: 0755
 
 - name: kinit
-  shell: echo "adminPassw0rd!" | kinit admin@TINYSTAGE.TEST
+  shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 - name: Create the service in IPA
   command: bash /srv/setup-fasjson-service.sh
