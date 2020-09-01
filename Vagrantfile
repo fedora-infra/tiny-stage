@@ -59,4 +59,20 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  config.vm.define "openidtest" do |openidtest|
+    openidtest.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/32/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-32-1.6.x86_64.vagrant-libvirt.box"
+    openidtest.vm.box = "f32-cloud-libvirt"
+    openidtest.vm.hostname = "openidtest.tinystage.test"
+    openidtest.vm.synced_folder ".", "/vagrant", disabled: true
+
+    openidtest.vm.provider :libvirt do |libvirt|
+      libvirt.cpus = 2
+      libvirt.memory = 2048
+    end
+
+    openidtest.vm.provision "ansible" do |ansible|
+      ansible.playbook = "ansible/openidtest.yml"
+    end
+  end
+
 end

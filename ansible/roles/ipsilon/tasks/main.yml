@@ -7,9 +7,10 @@
       - ipsilon-saml2
       - ipsilon-openid
       - ipsilon-openidc
+      - ipsilon-infosssd
+      - ipsilon-authgssapi
       - httpd
       - krb5-workstation
-
     state: present
 
 - name: Install the .bashrc
@@ -32,7 +33,22 @@
   changed_when: "False"
 
 - name: install ipsilon
-  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --ipa yes --openidc yes --openid yes --saml2 yes
+  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --ipa yes --openidc yes --openid yes --saml2 yes --info-sssd=yes --form=yes
+
+- name: get certificate from freeipa
+  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
+
+- name: configure SSLCertificateFile in ssl.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/ssl.conf
+    regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
+    line: SSLCertificateFile /etc/pki/tls/certs/server.pem
+
+- name: configure SSLCertificateKeyFile in ssl.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/ssl.conf
+    regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
+    line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
 
 - name: Enable and restart Apache
   systemd:
