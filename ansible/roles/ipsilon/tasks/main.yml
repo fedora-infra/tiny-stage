@@ -50,6 +50,20 @@
     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
 
+# we were hitting a condition where the key and cert were not there
+# yet before trying to restart apache. So we check they are here before
+# proceeding.
+
+- name: Check the cert is there
+  wait_for:
+    path: /etc/pki/tls/certs/server.pem
+    state: present
+
+- name: Check the key is there
+  wait_for:
+    path: /etc/pki/tls/private/server.key
+    state: present
+
 - name: Enable and restart Apache
   systemd:
     state: restarted
