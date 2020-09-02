@@ -21,7 +21,7 @@ app = flask.Flask(__name__)
 # Application configuration (add secret key of your choice)
 app.config["OIDC_CLIENT_SECRETS"] = "client_secrets.json"
 app.config["SECRET_KEY"] = "secretkey"
-
+app.config["OIDC_SCOPES"] = ['openid', 'email']
 # Set up FAS extension
 OIDC = OpenIDConnect(app, credentials_store=flask.session)
 
@@ -29,29 +29,18 @@ OIDC = OpenIDConnect(app, credentials_store=flask.session)
 def before_request():
     """Set the flask session as permanent."""
     flask.session.permanent = True
-    # Check if already logged in
-    if OIDC.user_loggedin:
-        if not hasattr(flask.session, 'fas_user') or not flask.session.fas_user:
-            flask.session.fas_user = munch.Munch({
-                'username': OIDC.user_getfield('nickname'),
-                'email': OIDC.user_getfield('email') or '',
-                'cla_done':
-                  'http://admin.fedoraproject.org/accounts/cla/done'
-                  in (OIDC.user_getfield('cla') or []),
-                  })
-        flask.g.user = flask.session.fas_user
-    else:
-        flask.g.fas_user = None
-        flask.session.fas_user = None
 
 @app.route("/logged_in")
 @OIDC.require_login
 def logged_in():
-    return flask.Response("You are now logged in. Try to logout by going to http://localhost:5000/logout")
+    return flask.Response(f"You are now logged in. Try to logout by going to http://localhost:5000/logout {OIDC.user_getfield('email')}")
 
 @app.route("/")
 def landing_page():
-    return flask.Response("Landing page, try to go to http://localhost:5000/login")
+    if OIDC.user_loggedin:
+        return flask.redirect(flask.url_for('.logged_in'))
+    else:
+        return flask.Response("Landing page, try to go to <a href='https://openidtest.tinystage.test/login'>https://openidtest.tinystage.test/login</a>")
 
 @app.route("/login")
 def login():
@@ -59,9 +48,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
+    if OIDC.user_loggedin:
         OIDC.logout()
-        flask.g.fas_user = None
-        flask.session.fas_user = None
         flask.flash('You have been logged out')
     return flask.redirect(flask.url_for('.landing_page'))
