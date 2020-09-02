@@ -51,3 +51,8 @@
       mode: 0644
       owner: vagrant
       group: vagrant
+
+- name: create dummy data
+  shell: python create_dummy_data.py
+  args:
+    chdir: /home/vagrant/
