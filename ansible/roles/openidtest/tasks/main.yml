@@ -31,7 +31,7 @@
   shell: cat /etc/ipa/ca.crt >> /usr/lib/python3.8/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
-  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://openidtest.tinystage.test/
+  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://openidtest.tinystage.test/oidc_callback
   become: yes
   become_user: vagrant
   args:
