@@ -18,10 +18,6 @@ Vagrant.configure(2) do |config|
       libvirt.memory = 2048
     end
 
-    # Vagrant adds '127.0.0.1 ipa.example.test ipa' as the first line in /etc/hosts
-    # and freeipa doesnt like that, so we remove it
-    freeipa.vm.provision "shell", inline: "sudo sed -i '1d' /etc/hosts"
-
     freeipa.vm.provision "ansible" do |ansible|
       ansible.playbook = "ansible/freeipa.yml"
     end
