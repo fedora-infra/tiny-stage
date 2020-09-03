@@ -1,4 +1,13 @@
 ---
+# Vagrant adds '127.0.0.1 ipa.tinystage.test ipa' as the first line in /etc/hosts
+# and freeipa doesnt like that, so we remove it
+- name: Tweak /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    regexp: >
+      127\.0\.0\.1 *.*\.test
+    state: absent
+
 - name: Install RPM packages
   dnf:
     name:
