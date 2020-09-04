@@ -1,0 +1,57 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - git-core
+      - ipa-client
+      - poetry
+    state: present
+
+- name: Enroll system as IPA client
+  shell: |
+    ipa-client-install --uninstall --unattended
+    ipa-client-install \
+      --hostname fas2ipa.tinystage.test \
+      --domain tinystage.test \
+      --realm {{ krb_realm }} \
+      --server ipa.tinystage.test \
+      -p {{ ipa_admin_user }} \
+      -w {{ ipa_admin_password }} \
+      --unattended \
+      --no-ntp \
+      --force-join
+
+- name: Check if fas2ipa is cloned already
+  become_user: vagrant
+  stat: path=fas2ipa
+  register: fas2ipa_dir
+
+- name: Clone fas2ipa repository
+  become_user: vagrant
+  command: git clone https://github.com/fedora-infra/fas2ipa.git
+  when: not (fas2ipa_dir.stat.exists and fas2ipa_dir.stat.isdir)
+
+- name: Prepare poetry virtualenv
+  become_user: vagrant
+  command:
+    cmd: poetry install
+    chdir: fas2ipa
+
+- name: Check if fas2ipa configuration file exists
+  become_user: vagrant
+  stat: path=fas2ipa/config.toml
+  register: config_file
+
+- name: Install configuration prep script
+  become_user: vagrant
+  template:
+    src: adjust_config.py
+    dest: fas2ipa/adjust_config.py
+    mode: ug=rwx,o=rx
+
+- name: Prepare configuration file
+  become_user: vagrant
+  when: not config_file.stat.exists
+  shell:
+    chdir: fas2ipa
+    cmd: umask 077; python3 ./adjust_config.py < config.toml.example > config.toml
