@@ -1,0 +1,7 @@
+---
+- hosts: fas2ipa
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - fas2ipa

@@ -12,6 +12,7 @@ machines = {
   "fasjson": {},
   "ipsilon": {},
   "openidtest": {},
+  "fas2ipa": {},
 }
 
 Vagrant.configure(2) do |config|
