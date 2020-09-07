@@ -5,7 +5,7 @@
   lineinfile:
     path: /etc/hosts
     regexp: >
-      127\.0\.0\.1 *.*\.test
+      127\.0\.0\.1 *.*\.test.*
     state: absent
 
 - name: Install RPM packages
