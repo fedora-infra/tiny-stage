@@ -69,6 +69,19 @@
     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
 
+# here we configure SSSD to pass more attributes through
+- name: configure sssd.conf ldap_user_extra_attrs
+  lineinfile:
+    path: /etc/sssd/sssd.conf
+    regexp: "ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname"
+    line: ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname, sn, uid, fasTimezone
+
+- name: configure sssd.conf user_attributes
+  lineinfile:
+    path: /etc/sssd/sssd.conf
+    regexp: "user_attributes = .*"
+    line: user_attributes = +mail, +street, +locality, +st, +postalCode, +telephoneNumber, +givenname, +sn, +uid, +fasTimezone
+
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before
 # proceeding.
