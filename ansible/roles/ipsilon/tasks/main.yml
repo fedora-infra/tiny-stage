@@ -11,6 +11,7 @@
       - ipsilon-authgssapi
       - httpd
       - krb5-workstation
+      - sqlite
     state: present
 
 - name: Install the .bashrc
@@ -34,6 +35,17 @@
 
 - name: install ipsilon
   shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-sssd=yes --form=yes
+
+
+# the ipsilon server install keeps the adminconfig in an SQLite database. on fedora prod/stage
+# this is kept in a file, but keeping it in a config file doesnt let us change the config in
+# the ipsilon admin interface, so we make our changes in the sqlite here.
+#
+# Note that ipsilon can export this to the file format for easier reading later with:
+# ipsilon-db2conf /etc/ipsilon/idp/ipsilon.conf /tmp/pants
+
+- name: change default attribute mappings for OIDC
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"uid\", \"preferred_username\"], [\"fastimezone\", \"zoneinfo\"], [\"fullname\",\"name\"]]');"
 
 - name: get certificate from freeipa
   shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
