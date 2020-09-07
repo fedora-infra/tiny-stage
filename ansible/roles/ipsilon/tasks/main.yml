@@ -47,6 +47,13 @@
 - name: change default attribute mappings for OIDC
   shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"uid\", \"preferred_username\"], [\"fastimezone\", \"zoneinfo\"], [\"fullname\",\"name\"]]');"
 
+- name: Copy OpenID Connect scope registrations
+  copy: src={{item}}.py
+        dest=/usr/lib/python3.8/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
+        owner=root group=root mode=0644
+  with_items:
+  - account-scopes
+
 - name: get certificate from freeipa
   shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
 
