@@ -54,6 +54,10 @@
   with_items:
   - account-scopes
 
+# enable the fedora scope registration
+- name: enable fedora scope registration in ipsilon config
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE provider_config SET value = 'fedora-account' WHERE name = 'openidc' AND option = 'enabled extensions';"
+
 - name: get certificate from freeipa
   shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
 
