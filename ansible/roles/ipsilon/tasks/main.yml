@@ -33,7 +33,7 @@
   changed_when: "False"
 
 - name: install ipsilon
-  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }}@{{ krb_realm }} --ipa yes --openidc yes --openid yes --saml2 yes --info-sssd=yes --form=yes
+  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-sssd=yes --form=yes
 
 - name: get certificate from freeipa
   shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
