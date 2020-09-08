@@ -45,7 +45,7 @@
 # ipsilon-db2conf /etc/ipsilon/idp/ipsilon.conf /tmp/pants
 
 - name: change default attribute mappings for OIDC
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"uid\", \"preferred_username\"], [\"fastimezone\", \"zoneinfo\"], [\"fullname\",\"name\"]]');"
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"*\", \"*\"], [\"uid\", \"preferred_username\"], [\"fasTimezone\", \"zoneinfo\"], [\"fasLocale\", \"locale\"], [\"fullname\",\"name\"]]');"
 
 - name: Copy OpenID Connect scope registrations
   copy: src={{item}}.py
@@ -78,13 +78,13 @@
   lineinfile:
     path: /etc/sssd/sssd.conf
     regexp: "ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname"
-    line: ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname, sn, uid, fasTimezone
+    line: ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname, sn, uid, fasTimezone, fasLocale
 
 - name: configure sssd.conf user_attributes
   lineinfile:
     path: /etc/sssd/sssd.conf
     regexp: "user_attributes = .*"
-    line: user_attributes = +mail, +street, +locality, +st, +postalCode, +telephoneNumber, +givenname, +sn, +uid, +fasTimezone
+    line: user_attributes = +mail, +street, +locality, +st, +postalCode, +telephoneNumber, +givenname, +sn, +uid, +fasTimezone, +fasLocale
 
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before

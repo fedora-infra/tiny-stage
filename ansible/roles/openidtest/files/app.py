@@ -21,7 +21,7 @@ app = flask.Flask(__name__)
 # Application configuration (add secret key of your choice)
 app.config["OIDC_CLIENT_SECRETS"] = "client_secrets.json"
 app.config["SECRET_KEY"] = "secretkey"
-app.config["OIDC_SCOPES"] = ['openid', 'email']
+app.config["OIDC_SCOPES"] = ['openid', 'email', 'profile']
 # Set up FAS extension
 OIDC = OpenIDConnect(app, credentials_store=flask.session)
 
@@ -33,7 +33,8 @@ def before_request():
 @app.route("/logged_in")
 @OIDC.require_login
 def logged_in():
-    return flask.Response(f"You are now logged in. Try to logout by going to http://localhost:5000/logout {OIDC.user_getfield('email')}")
+
+    return flask.Response(f"You are now logged in. Try to logout by going to http://localhost:5000/logout {OIDC.user_getfield('email')} {OIDC.user_getfield('zoneinfo')} {OIDC.user_getfield('preferred_username')}")
 
 @app.route("/")
 def landing_page():
