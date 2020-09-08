@@ -21,7 +21,7 @@ app = flask.Flask(__name__)
 # Application configuration (add secret key of your choice)
 app.config["OIDC_CLIENT_SECRETS"] = "client_secrets.json"
 app.config["SECRET_KEY"] = "secretkey"
-app.config["OIDC_SCOPES"] = ['openid', 'email', 'profile']
+app.config["OIDC_SCOPES"] = ['openid', 'email', 'profile', 'https://id.fedoraproject.org/scope/groups', 'https://id.fedoraproject.org/scope/agreements']
 # Set up FAS extension
 OIDC = OpenIDConnect(app, credentials_store=flask.session)
 
