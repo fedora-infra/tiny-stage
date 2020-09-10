@@ -7,7 +7,6 @@
       - ipsilon-saml2
       - ipsilon-openid
       - ipsilon-openidc
-      - ipsilon-infosssd
       - ipsilon-authgssapi
       - httpd
       - krb5-workstation
@@ -28,6 +27,7 @@
 - name: install fasjson-client with pip
   pip:
     name: fasjson-client
+    extra_args: --target /usr/lib/python3.8/site-packages/
 
 - name: Enroll system as IPA client
   shell: ipa-client-install --hostname ipsilon.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
@@ -57,7 +57,7 @@
 # ipsilon-db2conf /etc/ipsilon/idp/ipsilon.conf /tmp/pants
 
 - name: change default attribute mappings for OIDC
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"*\", \"*\"], [\"uid\", \"preferred_username\"], [\"fasTimezone\", \"zoneinfo\"], [\"fasLocale\", \"locale\"], [\"fullname\",\"name\"], [\"fasAgreements\",\"agreements\"], [\"fasGroups\",\"groups\"]]');"
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"email\", \"email\"], [\"username\", \"preferred_username\"], [\"timezone\", \"zoneinfo\"], [\"locale\", \"locale\"], [\"human_name\",\"name\"], [\"agreements\",\"agreements\"], [\"groups\",\"groups\"]]');"
 
 - name: Copy OpenID Connect scope registrations
   copy: src={{item}}.py
