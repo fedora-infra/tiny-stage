@@ -13,6 +13,7 @@ machines = {
   "ipsilon": {},
   "openidtest": {},
   "fas2ipa": {},
+  "noggin": {},
 }
 
 Vagrant.configure(2) do |config|
