@@ -1,4 +1,9 @@
 ---
+- name: upgrade all packages
+  dnf:
+    name: "*"
+    state: latest
+
 - name: Install RPM packages
   dnf:
     name:
