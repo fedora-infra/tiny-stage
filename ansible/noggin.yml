@@ -1,0 +1,7 @@
+---
+- hosts: noggin
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - noggin
