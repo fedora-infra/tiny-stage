@@ -97,6 +97,11 @@
     regexp: "user_attributes = .*"
     line: user_attributes = +mail, +street, +locality, +st, +postalCode, +telephoneNumber, +givenname, +sn, +uid, +fasTimezone, +fasLocale
 
+- name: fix the permissions of the keytab file
+  file:
+    name: /etc/httpd/conf/http.keytab
+    owner: ipsilon
+
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before
 # proceeding.
