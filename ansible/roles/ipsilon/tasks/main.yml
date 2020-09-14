@@ -67,6 +67,10 @@
 - name: enable fedora scope registration in ipsilon config
   shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE provider_config SET value = 'fedora-account' WHERE name = 'openidc' AND option = 'enabled extensions';"
 
+# disable sssd info plugin that the --ipa enables in ipsilon-server-install
+- name: enable fedora scope registration in ipsilon config
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE info_config SET value = 'fasjson' WHERE name = 'global' AND option = 'enabled';"
+
 - name: get certificate from freeipa
   shell:
     cmd: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/ipsilon.tinystage.test
@@ -84,23 +88,26 @@
     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
 
-# here we configure SSSD to pass more attributes through
-- name: configure sssd.conf ldap_user_extra_attrs
-  lineinfile:
-    path: /etc/sssd/sssd.conf
-    regexp: "ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname"
-    line: ldap_user_extra_attrs = mail, street, locality, st, postalCode, telephoneNumber, givenname, sn, uid, fasTimezone, fasLocale
-
-- name: configure sssd.conf user_attributes
-  lineinfile:
-    path: /etc/sssd/sssd.conf
-    regexp: "user_attributes = .*"
-    line: user_attributes = +mail, +street, +locality, +st, +postalCode, +telephoneNumber, +givenname, +sn, +uid, +fasTimezone, +fasLocale
-
 - name: fix the permissions of the keytab file
   file:
     name: /etc/httpd/conf/http.keytab
     owner: ipsilon
+
+- name: set default client keytab in krb5.conf
+  lineinfile:
+    path: /etc/krb5.conf
+    insertafter: 'default_ccache_name.*'
+    line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
+
+- name: Tune SELinux Policy
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_connect_ldap
+    - httpd_can_network_connect
+    - httpd_use_fusefs
 
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before

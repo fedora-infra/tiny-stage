@@ -40,22 +40,14 @@ Info plugin that retrieves user data from FASJSON. """
 
 
     def get_user_attrs(self, user):
-        user_data = None
-        user_group_data = None
         try:
             client = fasjson_client.Client(url=self.fasjson_url)
             user_data = client.get_user(username=user).result
             user_group_data = client.list_user_groups(username=user).result
         except Exception as e:
             self.error(f'FASJSON error: {e}')
-
-
-        if not user_data:
-            user_data =  {"username": "ryancarr", "surname": "Carr", "givenname": "Ryan", "human_name": "Ryan Carr", "emails": ["ryancarr@tinystage.test"], "ircnicks": ["RyanCarr", "RyanCarr_"], "locale":
- "en-US", "timezone": "Australia/Brisbane", "gpgkeyids": None, "certificates": None, "creation": None, "locked": False, "uri": "http://fasjson.tinystage.test/fasjson/v1/users/ryancarr/"}
-
-        if not user_group_data:
-            user_group_data = [{'groupname': 'developers', 'uri': 'http://fasjson.tinystage.test/fasjson/v1/groups/developers/'}, {'groupname': 'designers', 'uri': 'http://fasjson.tinystage.test/fasjson/v1/groups/designers/'}]
+            self.error(f'FASJSON error: {e}')
+            return
 
         # assumption that first email is the default
         user_data['email'] = user_data['emails'][0]
