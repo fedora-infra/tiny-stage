@@ -14,6 +14,7 @@ machines = {
   "openidtest": {},
   "fas2ipa": {},
   "noggin": {},
+  "elections": {},
 }
 
 Vagrant.configure(2) do |config|

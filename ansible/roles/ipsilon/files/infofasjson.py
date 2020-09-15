@@ -13,6 +13,7 @@ fasjson_mapping = [
     ['locale', 'locale'],
     ['human_name', 'human_name'],
     ['groups', 'groups'],
+    ['agreements', 'agreements'],
 ]
 
 
@@ -44,8 +45,8 @@ Info plugin that retrieves user data from FASJSON. """
             client = fasjson_client.Client(url=self.fasjson_url)
             user_data = client.get_user(username=user).result
             user_group_data = client.list_user_groups(username=user).result
+            user_agreements_data = client.list_user_agreements(username=user).result
         except Exception as e:
-            self.error(f'FASJSON error: {e}')
             self.error(f'FASJSON error: {e}')
             return
 
@@ -55,6 +56,8 @@ Info plugin that retrieves user data from FASJSON. """
         # add the groups to the user_data
         user_data['groups'] = [ g['groupname'] for g in user_group_data]
 
+        # add the agreements to the user_data
+        user_data['agreements'] = [ g['name'] for g in user_agreements_data]
 
         userattrs, extras = self.mapper.map_attributes(user_data)
         self.debug(f'user_data: {user_data}')
