@@ -1,0 +1,60 @@
+---
+- name: Install packages for MirrorManager2
+  dnf:
+    name:
+    - mirrormanager2
+    - mirrormanager2-backend
+    state: present
+
+- name: create service root directory
+  file:
+    path: /srv/www
+    state: directory
+    # created by the package above
+    owner: mirrormanager
+    group: mirrormanager
+    mode: 0755
+
+- name: Install WSGI script
+  template:
+    src: mirrormanager2.wsgi
+    dest: /srv/www/mirrormanager2.wsgi
+    owner: mirrormanager
+    group: mirrormanager
+  notify:
+  - Reload httpd
+
+- name: Install MirrorManager httpd configuration snippet
+  template:
+    src: mirrormanager.conf
+    dest: /etc/httpd/conf.d/mirrormanager.conf
+  notify:
+  - Reload httpd
+
+- name: Install MirrorManager configuration files
+  template:
+    src: "{{ item }}"
+    dest: "/etc/mirrormanager/{{ item }}"
+  with_items:
+    - alembic.ini
+    - mirrormanager2.cfg
+  notify:
+  - Reload httpd
+
+- name: Create database schema
+  command: python3 /usr/share/mirrormanager2/mirrormanager2_createdb.py
+  become_user: mirrormanager
+  environment:
+    MM2_CONFIG: /etc/mirrormanager/mirrormanager2.cfg
+
+- name: set sebooleans so mirrormanager can connect to ipsilon
+  seboolean:
+    name: httpd_can_network_connect
+    state: true
+    persistent: true
+
+- name: Enable, start the service
+  systemd:
+    name: httpd.service
+    enabled: true
+    state: started

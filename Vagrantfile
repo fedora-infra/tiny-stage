@@ -16,6 +16,7 @@ machines = {
   "fas2ipa": {},
   "noggin": {},
   "elections": {},
+  "mirrormanager2": {},
 }
 
 Vagrant.configure(2) do |config|
