@@ -8,9 +8,10 @@ machines = {
   "freeipa": {
     "vm.hostname": "ipa.#{domain}",
     "hostmanager.aliases": ["kerberos"],
+    "autostart": true,
   },
-  "fasjson": {},
-  "ipsilon": {},
+  "fasjson": {"autostart": true},
+  "ipsilon": {"autostart": true},
   "openidtest": {},
   "fas2ipa": {},
   "noggin": {},
@@ -23,7 +24,9 @@ Vagrant.configure(2) do |config|
   config.hostmanager.manage_guest = true
 
   machines.each do |mname, mdef|
-    config.vm.define mname do |machine|
+    autostart = mdef.fetch(:autostart, false)
+    mdef.delete(:autostart)
+    config.vm.define mname, autostart: autostart do |machine|
       machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/32/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-32-1.6.x86_64.vagrant-libvirt.box"
       machine.vm.box = "f32-cloud-libvirt"
       machine.vm.hostname = "#{mname}.#{domain}"
