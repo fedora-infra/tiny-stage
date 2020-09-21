@@ -43,7 +43,7 @@
         owner=root group=root mode=0644
 
 - name: install ipsilon
-  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-fasjson yes --form=yes
+  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-fasjson yes --form=yes --secure no
 
 
 # the ipsilon server install keeps the adminconfig in an SQLite database. on fedora prod/stage
