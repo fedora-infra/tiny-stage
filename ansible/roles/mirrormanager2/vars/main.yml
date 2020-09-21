@@ -1,0 +1,3 @@
+---
+mirrormanager2_db_url: "sqlite:////var/lib/mirrormanager/mirrormanager2_dev.sqlite"
+mirrormanager2_debug: true

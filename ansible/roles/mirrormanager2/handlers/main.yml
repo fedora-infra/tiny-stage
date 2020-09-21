@@ -1,0 +1,4 @@
+- name: Reload httpd
+  systemd:
+    name: httpd.service
+    state: reloaded
