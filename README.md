@@ -18,7 +18,7 @@ IPA will be at http://ipa.tinystage.test/ and fasjson at http://fasjson.tinystag
 
 Ipsilon is also accessible at: https://ipsilon.tinystage.test/idp
 
-And the tiny test application for testing out OpenID Connect with ipsilon is at https://openidtest.tinystage.test/
+And the tiny test application for testing out OpenID Connect with ipsilon is at https://oidctest.tinystage.test/
 
 The fas2ipa box contains a clone of the project of the same-name, pre-configured save for the FAS
 username and password. Set them in fas2ipa/config.toml and run fas2ipa like this:

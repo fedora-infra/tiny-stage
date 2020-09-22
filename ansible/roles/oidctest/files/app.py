@@ -41,7 +41,7 @@ def landing_page():
     if OIDC.user_loggedin:
         return flask.redirect(flask.url_for('.logged_in'))
     else:
-        return flask.Response("Landing page, try to go to <a href='https://openidtest.tinystage.test/login'>https://openidtest.tinystage.test/login</a>")
+        return flask.Response("Landing page, try to go to <a href='https://oidctest.tinystage.test/login'>https://oidctest.tinystage.test/login</a>")
 
 @app.route("/login")
 def login():

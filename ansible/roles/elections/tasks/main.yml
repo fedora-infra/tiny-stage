@@ -80,7 +80,7 @@
     insertafter: 'default_ccache_name.*'
     line: '  default_client_keytab_name = FILE:/etc/krb5.keytab'
 
-- name: Start openidtest service using systemd
+- name: Start elections service using systemd
   systemd:
     state: started
     name: elections
