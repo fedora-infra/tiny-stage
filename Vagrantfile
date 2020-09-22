@@ -12,7 +12,7 @@ machines = {
   },
   "fasjson": {"autostart": true},
   "ipsilon": {"autostart": true},
-  "openidtest": {},
+  "oidctest": {},
   "fas2ipa": {},
   "noggin": {},
   "elections": {},

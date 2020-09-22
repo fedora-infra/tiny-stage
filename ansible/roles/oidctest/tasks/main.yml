@@ -17,10 +17,10 @@
     group: vagrant
 
 - name: Enroll system as IPA client
-  shell: ipa-client-install --hostname openidtest.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
+  shell: ipa-client-install --hostname oidctest.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
 
 - name: Generate and get SSL cert
-  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/openidtest.tinystage.test
+  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/oidctest.tinystage.test
 
 - name: Check the cert is there
   wait_for:
@@ -41,7 +41,7 @@
   shell: cat /etc/ipa/ca.crt >> /usr/lib/python3.8/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
-  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://openidtest.tinystage.test/oidc_callback
+  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://oidctest.tinystage.test/oidc_callback
   become: yes
   become_user: vagrant
   args:
@@ -55,18 +55,18 @@
     owner: vagrant
     group: vagrant
 
-- name: Install the systemd unit files for openidtest services
+- name: Install the systemd unit files for oidctest services
   copy:
       src: "{{ item }}"
       dest: /etc/systemd/system/{{ item }}
       mode: 0644
   with_items:
-      - openidtest.service
+      - oidctest.service
 
-- name: Start openidtest service using systemd
+- name: Start oidctest service using systemd
   systemd:
     state: started
-    name: openidtest
+    name: oidctest
     daemon_reload: yes
     enabled: yes
 
