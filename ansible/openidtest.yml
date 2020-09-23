@@ -1,0 +1,9 @@
+---
+- hosts: openidtest
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - openidtest
+
+
