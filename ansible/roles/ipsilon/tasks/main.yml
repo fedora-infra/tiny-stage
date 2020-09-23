@@ -14,6 +14,8 @@
       - gcc # only for installing fasjson-client from pip
       - python-devel # only for installing fasjson-client from pip
       - sqlite
+      - git
+      - patch
     state: present
 
 - name: Install the .bashrc
@@ -37,10 +39,47 @@
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
-- name: Copy infofasjson Info Plugin
-  copy: src=infofasjson.py
-        dest=/usr/lib/python3.8/site-packages/ipsilon/info/infofasjson.py
-        owner=root group=root mode=0644
+
+- name: get ipsilon-fedora
+  git:
+    repo: https://pagure.io/fedora-infra/ipsilon-fedora.git
+    version: staging
+    dest: /home/vagrant/ipsilon-fedora
+
+
+- name: Copy ipsilon-fedora stuff
+  copy:
+    src: /home/vagrant/ipsilon-fedora/ipsilon/{{item}}
+    dest: /usr/lib/python3.8/site-packages/ipsilon/{{item}}
+    owner: root
+    group: root
+    mode: 0644
+    remote_src: yes
+  with_items:
+  - providers/openidc/plugins/account-scopes.py
+  - providers/openidc/plugins/waiverdb.py
+  - providers/openidc/plugins/src.py
+  - providers/openidc/plugins/mbs.py
+  - providers/openidc/plugins/odcs.py
+  - providers/openidc/plugins/kerneltest.py
+  - providers/openidc/plugins/fpdc.py
+  - providers/openidc/plugins/beaker.py
+  - providers/openidc/plugins/wiki.py
+  - providers/openid/extensions/api.py
+  - info/infofas.py
+  - info/infofasjson.py
+
+
+# - name: apply ipsilon-fedora stuff
+#   shell: ./install.sh
+#   args:
+#     chdir: /home/vagrant/ipsilon-fedora
+
+
+# - name: Copy infofasjson Info Plugin
+#   copy: src=infofasjson.py
+#         dest=/usr/lib/python3.8/site-packages/ipsilon/info/infofasjson.py
+#         owner=root group=root mode=0644
 
 - name: install ipsilon
   shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-fasjson yes --form=yes --secure no
@@ -56,19 +95,19 @@
 - name: change default attribute mappings for OIDC
   shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"email\", \"email\"], [\"username\", \"preferred_username\"], [\"timezone\", \"zoneinfo\"], [\"locale\", \"locale\"], [\"human_name\",\"name\"], [\"agreements\",\"agreements\"], [\"groups\",\"groups\"]]');"
 
-- name: Copy OpenID Connect scope registrations
-  copy: src={{item}}.py
-        dest=/usr/lib/python3.8/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
-        owner=root group=root mode=0644
-  with_items:
-  - account-scopes
+# - name: Copy OpenID Connect scope registrations
+#   copy: src={{item}}.py
+#         dest=/usr/lib/python3.8/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
+#         owner=root group=root mode=0644
+#   with_items:
+#   - account-scopes
 
 # enable the fedora scope registration
 - name: enable fedora scope registration in ipsilon config
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE provider_config SET value = 'fedora-account' WHERE name = 'openidc' AND option = 'enabled extensions';"
+  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE provider_config SET value = 'fedora-account,mbs,beaker,waiverdb,odcs,wiki,src,fpdc,kerneltest' WHERE name = 'openidc' AND option = 'enabled extensions';"
 
 # disable sssd info plugin that the --ipa enables in ipsilon-server-install
-- name: enable fedora scope registration in ipsilon config
+- name: disable sssd info plugin
   shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE info_config SET value = 'fasjson' WHERE name = 'global' AND option = 'enabled';"
 
 - name: get certificate from freeipa
