@@ -14,7 +14,9 @@ machines = {
   "ipsilon": {"autostart": true},
   "oidctest": {},
   "openidtest": {},
-  "fas2ipa": {},
+  "fas2ipa": {
+    "libvirt.memory": 4096,
+  },
   "noggin": {},
   "elections": {},
   "mirrormanager2": {},
@@ -33,6 +35,11 @@ Vagrant.configure(2) do |config|
       machine.vm.box = "f33-cloud-libvirt"
       machine.vm.hostname = "#{mname}.#{domain}"
 
+      libvirt_def = {
+        "cpus": 2,
+        "memory": 2048,
+      }
+
       mdef.each do |prop, value|
         prop = prop.to_s
 
@@ -41,19 +48,28 @@ Vagrant.configure(2) do |config|
         end
 
         prop_elems = prop.split(".")
-        obj = machine
-        prop_elems[..-2].each do |elem_prop|
-          obj = obj.send("#{elem_prop}")
-        end
 
-        obj.send("#{prop_elems[-1]}=", value)
+        if prop_elems[0] == "libvirt"
+          dct = libvirt_def
+          prop_elems[1..-2].each do |key|
+            dct = dct[key]
+          end
+          dct[prop_elems[-1]] = value
+        else
+          obj = machine
+          prop_elems[..-2].each do |elem_prop|
+            obj = obj.send("#{elem_prop}")
+          end
+          obj.send("#{prop_elems[-1]}=", value)
+        end
       end
 
       machine.vm.synced_folder ".", "/vagrant", type: "sshfs"
 
       machine.vm.provider :libvirt do |libvirt|
-        libvirt.cpus = 2
-        libvirt.memory = 2048
+        libvirt_def.each do |prop, value|
+          libvirt.send("#{prop}=", value)
+        end
       end
 
       machine.vm.provision "ansible" do |ansible|
