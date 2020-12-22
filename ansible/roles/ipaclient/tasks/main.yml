@@ -1,0 +1,27 @@
+---
+- name: Install IPA client packages
+  package:
+    name:
+      - freeipa-client
+    state: present
+  tags:
+    - ipa/client
+    - packages
+
+- name: Enroll system as IPA client
+  shell: |
+    ipa-client-install --uninstall --unattended
+    ipa-client-install \
+      --hostname ipaclient.tinystage.test \
+      --domain tinystage.test \
+      --realm {{ krb_realm }} \
+      --server ipa.tinystage.test \
+      -p {{ ipa_admin_user }} \
+      -w {{ ipa_admin_password }} \
+      --unattended \
+      --no-ntp \
+      --force-join \
+      --mkhomedir
+  tags:
+    - ipa/client
+    - config

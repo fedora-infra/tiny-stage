@@ -20,6 +20,7 @@ machines = {
   "noggin": {},
   "elections": {},
   "mirrormanager2": {},
+  "ipaclient": {},
 }
 
 Vagrant.configure(2) do |config|

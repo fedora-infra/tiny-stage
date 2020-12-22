@@ -3,7 +3,7 @@
 An attempt to set up freeipafas, fasjson and noggin so we can test auth without stage.
 
 ```
-$ sudo dnf install ansible libvirt vagrant-libvirt vagrant-sshfs vagrant-hostmanager
+$ sudo dnf install ansible ansible-freeipa libvirt vagrant-libvirt vagrant-sshfs vagrant-hostmanager
 $ sudo systemctl enable libvirtd
 $ sudo systemctl start libvirtd
 ```
