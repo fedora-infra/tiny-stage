@@ -46,7 +46,7 @@
 
 # not sure of how to do this another way, but without this, oidc_register fails
 - name: Put tinystage root CA in the list of CA's for httplib2
-  shell: cat /etc/ipa/ca.crt >> /usr/local/lib/python3.8/site-packages/httplib2/cacerts.txt
+  shell: cat /etc/ipa/ca.crt >> /usr/local/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
   shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://elections.tinystage.test

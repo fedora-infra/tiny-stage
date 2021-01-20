@@ -6,3 +6,16 @@
     - tmux
     - vim-enhanced
     state: present
+
+- name: Determine Python version
+  command:
+    argv:
+      - python3
+      - -c
+      - "from sys import version_info as vi; print(f'{vi[0]}.{vi[1]}')"
+  register: _python3_version_result
+  changed_when: False
+
+- name: Set Python version fact
+  set_fact:
+    py3ver: "{{ _python3_version_result.stdout | trim }}"

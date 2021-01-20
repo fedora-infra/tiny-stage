@@ -27,7 +27,7 @@
 - name: install fasjson-client with pip
   pip:
     name: fasjson-client
-    extra_args: --target /usr/lib/python3.8/site-packages/
+    extra_args: --target /usr/lib/python{{ py3ver }}/site-packages/
 
 - name: Enroll system as IPA client
   shell:
@@ -39,7 +39,7 @@
 
 - name: Copy infofasjson Info Plugin
   copy: src=infofasjson.py
-        dest=/usr/lib/python3.8/site-packages/ipsilon/info/infofasjson.py
+        dest=/usr/lib/python{{ py3ver }}/site-packages/ipsilon/info/infofasjson.py
         owner=root group=root mode=0644
 
 - name: install ipsilon
@@ -58,7 +58,7 @@
 
 - name: Copy OpenID Connect scope registrations
   copy: src={{item}}.py
-        dest=/usr/lib/python3.8/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
+        dest=/usr/lib/python{{ py3ver }}/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
         owner=root group=root mode=0644
   with_items:
   - account-scopes
