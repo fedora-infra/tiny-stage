@@ -23,6 +23,35 @@
     ipaadmin_password: "{{ ipa_admin_password }}"
     state: disabled
 
+- name: "Ensure the sudo, sudo-i HBAC services exist"
+  ipahbacsvc:
+    name: "{{ item }}"
+    description: "{{ item }}"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+  loop: ["sudo", "sudo-i"]
+
+- name: "Ensure the Sudo HBAC service group exists"
+  ipahbacsvcgroup:
+    name: "Sudo"
+    description: "Default group of Sudo related services"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    hbacsvc:
+      - sudo
+      - sudo-i
+
+- name: "Let everybody run sudo"
+  ipahbacrule:
+    name: "all-users/sudo"
+    description: "Allow all users to execute the sudo command"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    hostcategory: "all"
+    usercategory: "all"
+    hbacsvcgroup:
+      - Sudo
+
 ## Host-specific rules
 
 # shell access

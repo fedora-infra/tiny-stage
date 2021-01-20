@@ -39,3 +39,10 @@
   tags:
     - ipa/client
     - config
+
+- name: Configure sudo via IPA
+  delegate_to: freeipa
+  import_tasks: sudo.yml
+  tags:
+    - ipa/client
+    - config
