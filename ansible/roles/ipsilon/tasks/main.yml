@@ -14,6 +14,7 @@
       - gcc # only for installing fasjson-client from pip
       - python-devel # only for installing fasjson-client from pip
       - sqlite
+      - openssl
     state: present
 
 - name: Install the .bashrc
