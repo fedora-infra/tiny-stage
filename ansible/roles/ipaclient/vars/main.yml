@@ -1,3 +1,4 @@
 ---
 ipa_host_group: "ipaclients"
 ipa_host_group_desc: "IPA Client Machines"
+ipa_client_shell_groups: []
