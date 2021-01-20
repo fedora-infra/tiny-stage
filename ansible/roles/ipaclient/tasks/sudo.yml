@@ -1,0 +1,53 @@
+- name: Create missing user groups
+  ipagroup:
+    name: "{{ item }}"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+  loop: "{{ (ipa_client_sudo_groups | default([])) + (ipa_client_sudo_nopasswd_groups | default([])) | list }}"
+  tags:
+    - tiny-stage-only
+
+- name: Check that configured sudo groups exist
+  command: "getent group {{ item }}"
+  changed_when: False
+  loop: "{{ (ipa_client_sudo_groups | default([])) + (ipa_client_sudo_nopasswd_groups | default([])) | list }}"
+
+- name: "Give members of `sysadmin-main` sudo access to anything, anywhere"
+  ipasudorule:
+    name: "usergroup/sysadmin-main"
+    description: "Allow members of `sysadmin-main` to use sudo to do anything, anywhere"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+    cmdcategory: "all"
+    hostcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+    group:
+      - sysadmin-main
+
+- name: "Give certain groups sudo access to anything on host group {{ ipa_host_group }}"
+  ipasudorule:
+    name: "hostgroup/{{ ipa_host_group }}"
+    description: "Give members of groups sudo access to anything on host group {{ ipa_host_group }}"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+    group: "{{ ipa_client_sudo_groups | list }}"
+    hostgroup: "{{ ipa_host_group }}"
+    cmdcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+  when: ipa_client_sudo_groups is defined and ipa_client_sudo_groups | length > 0
+
+- name: "Give certain groups password-less sudo access to anything on host group {{ ipa_host_group }}"
+  ipasudorule:
+    name: "hostgroup/{{ ipa_host_group }}/nopasswd"
+    description: "Give members of groups password-less sudo access to anything on host group {{ ipa_host_group }}"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+    group: "{{ ipa_client_sudo_groups_nopasswd | list }}"
+    hostgroup: "{{ ipa_host_group }}"
+    cmdcategory: "all"
+    runasusercategory: "all"
+    runasgroupcategory: "all"
+    options: "!authenticate"
+  when: ipa_client_sudo_groups_nopasswd is defined and ipa_client_sudo_groups_nopasswd | length > 0
