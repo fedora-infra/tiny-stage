@@ -32,3 +32,10 @@
   tags:
     - ipa/client
     - config
+
+- name: Configure HBAC on IPA cluster
+  delegate_to: freeipa
+  import_tasks: hbac.yml
+  tags:
+    - ipa/client
+    - config

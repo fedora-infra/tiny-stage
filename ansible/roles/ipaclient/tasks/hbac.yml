@@ -1,0 +1,79 @@
+## Cluster-wide rules
+
+- name: "Give members of group sysadmin-main access to anything, anywhere"
+  ipahbacrule:
+    name: "usergroup/sysadmin-main"
+    description: "Give members of group sysadmin-main access to anything, anywhere"
+    hostcategory: "all"
+    servicecategory: "all"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+    group:
+      - sysadmin-main
+
+- name: "Enable usergroup/sysadmin-main HBAC rule"
+  ipahbacrule:
+    name: "usergroup/sysadmin-main"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: enabled
+
+- name: "Disable allow_all HBAC rule"
+  ipahbacrule:
+    name: allow_all
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: disabled
+
+## Host-specific rules
+
+# shell access
+
+- name: "Warn if `fas_client_groups` is set"
+  fail:
+    msg: "`fas_client_groups` is defined, should be converted to a list and named `ipa_client_shell_groups`"
+  ignore_errors: true
+  when: fas_client_groups is defined
+
+- name: "Convert `fas_client_groups` string to `ipa_client_shell_groups` list if missing"
+  set_fact:
+    ipa_client_shell_groups: "{{ fas_client_groups.split(',') | list }}"
+  when: fas_client_groups is defined and ipa_client_shell_groups is not defined
+
+- name: Add the sshd HBAC service in IPA
+  ipahbacsvc:
+    name: sshd
+    description: SSH daemon
+    ipaadmin_password: "{{ ipa_admin_password }}"
+
+- name: Add the shell-access service group in IPA
+  ipahbacsvcgroup:
+    name: shell-access
+    description: Group of shell access services
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    hbacsvc:
+      - sshd
+
+- name: Create missing shell access user groups
+  ipagroup:
+    name: "{{ item }}"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+  loop: "{{ (ipa_client_shell_groups | default([])) | list }}"
+  when: False
+  tags:
+    - tiny-stage-only
+
+- name: Check that shell access user groups exist
+  command: "getent group {{ item }}"
+  changed_when: False
+  loop: "{{ (ipa_client_shell_groups | default([])) | list }}"
+
+- name: "Give certain groups shell access on host group {{ ipa_host_group }}"
+  ipahbacrule:
+    name: "hostgroup/{{ ipa_host_group }}/shell-access"
+    description: "Give certain groups shell access on host group {{ ansible_fqdn }}"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    hbacsvcgroup:
+      - shell-access
+    state: present
+    group: "{{ ipa_client_shell_groups | default([]) | list }}"
+    hostgroup: "{{ ipa_host_group }}"
