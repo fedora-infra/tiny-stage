@@ -1,0 +1,30 @@
+## Cluster-wide rules
+
+- name: Ensure sysadmin-main group exists
+  ipagroup:
+    name: "sysadmin-main"
+    state: present
+    ipaadmin_password: "{{ ipa_admin_password }}"
+  tags:
+    - tiny-stage-only
+
+- name: Check that sysadmin-main group exists
+  command: "getent group sysadmin-main"
+  changed_when: False
+
+## Rules specific to hosts, host groups
+
+- name: Ensure IPA host group exists
+  ipahostgroup:
+    name: "{{ ipa_host_group }}"
+    description: "{{ ipa_host_group_desc | default(ipa_host_group) }}"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+
+- name: Ensure host is in IPA host group
+  ipahostgroup:
+    name: "{{ ipa_host_group }}"
+    ipaadmin_password: "{{ ipa_admin_password }}"
+    state: present
+    action: member
+    host: "{{ ansible_fqdn }}"

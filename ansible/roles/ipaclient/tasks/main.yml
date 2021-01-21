@@ -25,3 +25,10 @@
   tags:
     - ipa/client
     - config
+
+- name: Basic configuration for client on IPA cluster
+  delegate_to: freeipa
+  import_tasks: common.yml
+  tags:
+    - ipa/client
+    - config
