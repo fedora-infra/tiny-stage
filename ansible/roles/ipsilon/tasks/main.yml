@@ -8,6 +8,7 @@
       - ipsilon-openid
       - ipsilon-openidc
       - ipsilon-authgssapi
+      - ipsilon-theme-Fedora
       - httpd
       - krb5-workstation
       - krb5-devel # only for installing fasjson-client from pip
@@ -109,6 +110,31 @@
     - httpd_can_connect_ldap
     - httpd_can_network_connect
     - httpd_use_fusefs
+
+- name: Remove default static alias from httpd conf
+  replace:
+    path: /etc/ipsilon/idp/idp.conf
+    regexp: '^\s*Alias \/idp\/ui \/usr\/share\/ipsilon\/ui'
+    replace: '#Alias /idp/ui /usr/share/ipsilon/ui'
+
+- name: Add static alias for Fedora theme in httpd conf
+  lineinfile:
+    path: /etc/ipsilon/idp/idp.conf
+    insertbefore: BOF
+    line: Alias /idp/ui /usr/share/ipsilon/themes/Fedora
+
+- name: Add static alias for Fedora theme in httpd conf
+  lineinfile:
+    path: /etc/ipsilon/idp/idp.conf
+    insertbefore: BOF
+    line: Alias /ui /usr/share/ipsilon/themes/Fedora
+
+- name: Set ipsilon theme to fedora
+  lineinfile:
+    path: /etc/ipsilon/idp/ipsilon.conf
+    insertafter: 'template_dir = "templates"'
+    line: 'theme_dir = "/usr/share/ipsilon/themes/Fedora"'
+
 
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before
