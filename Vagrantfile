@@ -21,6 +21,7 @@ machines = {
   "elections": {},
   "mirrormanager2": {},
   "ipaclient": {},
+  "nonbot":{"operatingsystem": "centos8"},
 }
 
 Vagrant.configure(2) do |config|
@@ -31,9 +32,16 @@ Vagrant.configure(2) do |config|
   machines.each do |mname, mdef|
     autostart = mdef.fetch(:autostart, false)
     mdef.delete(:autostart)
+    operatingsystem = mdef.fetch(:operatingsystem, "fedora")
+    mdef.delete(:operatingsystem)
     config.vm.define mname, autostart: autostart do |machine|
-      machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-33-1.2.x86_64.vagrant-libvirt.box"
-      machine.vm.box = "f33-cloud-libvirt"
+      if operatingsystem == 'centos8'
+        config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.3.2011-20201204.2.x86_64.vagrant-libvirt.box"
+        config.vm.box = "centos83-cloud-libvirt"
+      else
+        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-33-1.2.x86_64.vagrant-libvirt.box"
+        machine.vm.box = "f33-cloud-libvirt"
+      end
       machine.vm.hostname = "#{mname}.#{domain}"
 
       libvirt_def = {
