@@ -1,0 +1,12 @@
+[Unit]
+Description=fedora-messaging-logger
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=vagrant
+WorkingDirectory=/vagrant
+ExecStart=fedora-messaging consume
+
+[Install]
+WantedBy=multi-user.target

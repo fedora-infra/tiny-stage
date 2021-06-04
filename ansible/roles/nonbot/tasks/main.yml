@@ -1,9 +1,4 @@
 ---
-- name: Enable EPEL
-  dnf:
-      name: ['epel-release']
-      state: present
-
 # limnoria depends on python3-mock which is in powertools
 - name: Enable CentOS Powertools
   ini_file:
@@ -20,15 +15,10 @@
     option: enabled
     value: "1"
 
-- name: enable rabbitmq repo
-  copy:
-      src: rabbitmq.repo
-      dest: /etc/yum.repos.d/rabbitmq.repo
-
 # https://kojipkgs.fedoraproject.org//work/tasks/6262/68326262/python3-sgmllib3k-1.0.0-2.el8.noarch.rpm
 - name: Install RPM packages
   dnf:
-      name: ['rabbitmq-server', 'limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'https://kojipkgs.fedoraproject.org//packages/supybot-meetbot/0.3/1.el8/noarch/supybot-meetbot-0.3-1.el8.noarch.rpm', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc', 'gssproxy', 'ipa-client']
+      name: ['limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'https://kojipkgs.fedoraproject.org//packages/supybot-meetbot/0.3/1.el8/noarch/supybot-meetbot-0.3-1.el8.noarch.rpm', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc', 'gssproxy', 'ipa-client']
       disable_gpg_check: yes
       state: present
 
@@ -41,13 +31,6 @@
   systemd:
     state: started
     name: ngircd
-    daemon_reload: yes
-    enabled: yes
-
-- name: Start rabbitmq-server service using systemd
-  systemd:
-    state: started
-    name: rabbitmq-server
     daemon_reload: yes
     enabled: yes
 
