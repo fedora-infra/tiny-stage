@@ -22,6 +22,7 @@ machines = {
   "mirrormanager2": {},
   "ipaclient": {},
   "nonbot":{"operatingsystem": "centos8"},
+  "fedora-messaging": {"autostart": true},
 }
 
 Vagrant.configure(2) do |config|
