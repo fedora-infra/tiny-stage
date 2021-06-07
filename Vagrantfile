@@ -74,7 +74,9 @@ Vagrant.configure(2) do |config|
         end
       end
 
-      machine.vm.synced_folder ".", "/vagrant", type: "sshfs"
+      machine.vm.synced_folder ".", "/vagrant", disabled: true
+      machine.vm.synced_folder "synced_folders/#{mname}", "/vagrant", type: "sshfs", create: true
+
 
       machine.vm.provider :libvirt do |libvirt|
         libvirt_def.each do |prop, value|
@@ -86,6 +88,8 @@ Vagrant.configure(2) do |config|
         ansible.playbook = "ansible/#{mname}.yml"
         ansible.config_file = "ansible/ansible.cfg"
       end
+
+      
     end
   end
 end
