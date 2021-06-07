@@ -77,5 +77,3 @@
     name: noggin
     daemon_reload: yes
     enabled: yes
-
-- import_tasks: rabbitmq.yml
