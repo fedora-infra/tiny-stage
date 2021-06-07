@@ -8,6 +8,7 @@
       - python-devel
       - ipa-client
       - krb5-devel
+      - libpq-devel
     state: present
 
 - name: Install the .bashrc
@@ -20,8 +21,7 @@
 
 - name: get fedora-electionss
   git:
-    repo: https://pagure.io/forks/ryanlerch/elections.git
-    version: tinystage
+    repo: https://pagure.io/elections.git
     dest: /home/vagrant/elections
 
 - name: install elections requirements
@@ -69,16 +69,18 @@
   with_items:
       - elections.service
 
-- name: create the database
-  shell: python createdb.py
-  args:
-    chdir: /home/vagrant/elections
-
 - name: set default client keytab in krb5.conf
   lineinfile:
     path: /etc/krb5.conf
     insertafter: 'default_ccache_name.*'
     line: '  default_client_keytab_name = FILE:/etc/krb5.keytab'
+
+- name: create the database
+  shell: python createdb.py
+  environment:
+    FEDORA_ELECTIONS_CONFIG: /home/vagrant/elections/config
+  args:
+    chdir: /home/vagrant/elections
 
 - name: Start elections service using systemd
   systemd:
@@ -86,4 +88,3 @@
     name: elections
     daemon_reload: yes
     enabled: yes
-
