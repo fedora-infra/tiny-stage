@@ -35,12 +35,16 @@ untouched_ipa = python_freeipa.ClientLegacy(
     host="ipa.tinystage.test", verify_ssl="/etc/ipa/ca.crt"
 )
 
-ipa._request("fasagreement_add", "FPCA", {"description": "This ia the FPCA agreement"})
-
+agreement_name = "FPCA"
+group_name = f"signed_{agreement_name}"
+ipa._request("fasagreement_add", agreement_name, {"description": f"This is the {agreement_name} agreement"})
+ipa.group_add(group_name, f"Signers of the {agreement_name}", fasgroup=True)
+ipa._request("automember_add", group_name, {"type":"group"})
+ipa._request("automember_add_condition", group_name, {"type":"group", "key":"memberof", "automemberinclusiveregex":f"^cn={agreement_name},cn=fasagreements,"})
 
 for group in groups.keys():
     ipa.group_add(group, f"A group for {group}", fasgroup=True)
-    ipa._request("fasagreement_add_group", "FPCA", {"group": group})
+    ipa._request("fasagreement_add_group", agreement_name, {"group": group})
 
 ipa.group_add("general", f"A group for general stuff", fasgroup=True)
 
