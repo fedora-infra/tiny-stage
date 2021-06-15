@@ -11,11 +11,11 @@
       - ipsilon-theme-Fedora
       - httpd
       - krb5-workstation
-      - krb5-devel # only for installing fasjson-client from pip
-      - gcc # only for installing fasjson-client from pip
-      - python-devel # only for installing fasjson-client from pip
+      - fasjson-client
       - sqlite
       - openssl
+      - git
+      - patch
     state: present
 
 - name: Install the .bashrc
@@ -26,10 +26,16 @@
     owner: vagrant
     group: vagrant
 
-- name: install fasjson-client with pip
-  pip:
-    name: fasjson-client
-    extra_args: --target /usr/lib/python{{ py3ver }}/site-packages/
+- name: Download Fedora-specific code
+  git:
+    repo: https://pagure.io/fedora-infra/ipsilon-fedora.git
+    dest: /opt/ipsilon-fedora
+    force: yes
+
+- name: Install Fedora-specific code
+  command:
+    cmd: ./install.sh
+    chdir: /opt/ipsilon-fedora
 
 - name: Enroll system as IPA client
   shell:
@@ -39,39 +45,43 @@
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
-- name: Copy infofasjson Info Plugin
-  copy: src=infofasjson.py
-        dest=/usr/lib/python{{ py3ver }}/site-packages/ipsilon/info/infofasjson.py
-        owner=root group=root mode=0644
 
 - name: install ipsilon
-  shell: ipsilon-server-install --server-debugging --admin-user {{ ipa_admin_user }} --ipa yes --openidc yes --openid yes --saml2 yes --info-fasjson yes --form=yes --secure no
+  command:
+    cmd:  ipsilon-server-install 
+          --secure no
+          --server-debugging
+          --admin-user={{ ipa_admin_user }}
+          --ipa=yes
+          --openidc=yes
+          --openid=yes
+          --saml2=yes
+          --info-sssd=yes
+          --form=yes
+    creates: /etc/ipsilon/idp/ipsilon.conf
 
+- name: overwrite ipsilon configuration
+  copy:
+    src: "ipsilon.conf"
+    dest: "/etc/ipsilon/idp/ipsilon.conf"
+    owner: ipsilon
+    group: ipsilon
+    mode: 0600
 
-# the ipsilon server install keeps the adminconfig in an SQLite database. on fedora prod/stage
-# this is kept in a file, but keeping it in a config file doesnt let us change the config in
-# the ipsilon admin interface, so we make our changes in the sqlite here.
-#
-# Note that ipsilon can export this to the file format for easier reading later with:
-# ipsilon-db2conf /etc/ipsilon/idp/ipsilon.conf /tmp/pants
+# the configuration.conf template uses this to populate
+# the openidc keyid
+- name: get openidc key
+  ansible.builtin.slurp:
+    src: /var/lib/ipsilon/idp/openidc/openidc.key
+  register: openidckey
 
-- name: change default attribute mappings for OIDC
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "INSERT INTO provider_config VALUES('openidc','default attribute mapping','[[\"email\", \"email\"], [\"username\", \"preferred_username\"], [\"timezone\", \"zoneinfo\"], [\"locale\", \"locale\"], [\"human_name\",\"name\"], [\"agreements\",\"agreements\"], [\"groups\",\"groups\"]]');"
-
-- name: Copy OpenID Connect scope registrations
-  copy: src={{item}}.py
-        dest=/usr/lib/python{{ py3ver }}/site-packages/ipsilon/providers/openidc/plugins/{{item}}.py
-        owner=root group=root mode=0644
-  with_items:
-  - account-scopes
-
-# enable the fedora scope registration
-- name: enable fedora scope registration in ipsilon config
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE provider_config SET value = 'fedora-account' WHERE name = 'openidc' AND option = 'enabled extensions';"
-
-# disable sssd info plugin that the --ipa enables in ipsilon-server-install
-- name: enable fedora scope registration in ipsilon config
-  shell: sqlite3 /var/lib/ipsilon/idp/adminconfig.sqlite "UPDATE info_config SET value = 'fasjson' WHERE name = 'global' AND option = 'enabled';"
+- name: copy ipsilon admin configuration
+  template:
+    src: "configuration.conf"
+    dest: "/etc/ipsilon/idp/configuration.conf"
+    owner: ipsilon
+    group: ipsilon
+    mode: 0600
 
 - name: get certificate from freeipa
   shell:
@@ -156,4 +166,3 @@
     name: httpd
     enabled: yes
     daemon_reload: yes
-
