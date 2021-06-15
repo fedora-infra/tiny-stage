@@ -85,3 +85,9 @@ vagrant ssh elections
 ## Users and Passwords
 
 Tiny Stage populates the IPA database with many users, and for ease of use, they all have `password` as the password.
+
+## Seeing users and Groups in the IPA admin webUI
+
+Since it's your tinystage, you have access to the IPA WebUI as admin. got to https://ipa.tinystage.test/ and log in with the username `admin` and the password `password` and you can view all the users and groups, and change any details.
+![image](https://user-images.githubusercontent.com/592259/122032526-11025c80-ce13-11eb-9a21-66c9047c232e.png)
+
