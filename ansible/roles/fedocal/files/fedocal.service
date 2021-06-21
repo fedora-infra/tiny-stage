@@ -1,0 +1,13 @@
+[Unit]
+Description=fedocal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=FLASK_DEBUG=1
+User=root
+WorkingDirectory=/home/vagrant/fedocal
+ExecStart=python runserver.new.py --config /home/vagrant/fedocal.cfg --port 443 --host "0.0.0.0" --cert "/etc/pki/tls/certs/server.pem" --key "/etc/pki/tls/private/server.key"
+
+[Install]
+WantedBy=multi-user.target

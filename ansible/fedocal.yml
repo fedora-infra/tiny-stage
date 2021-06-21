@@ -1,0 +1,7 @@
+---
+- hosts: fedocal
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - fedocal
