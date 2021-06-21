@@ -1,5 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+print "ruby #{ RUBY_VERSION }p#{ RUBY_PATCHLEVEL }"
+
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
 domain = "tinystage.test"
@@ -23,6 +25,7 @@ machines = {
   "ipaclient": {},
   "nonbot":{"operatingsystem": "centos8"},
   "fedora-messaging": {"autostart": true},
+  "fedocal": {},
 }
 
 Vagrant.configure(2) do |config|

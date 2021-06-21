@@ -1,0 +1,105 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - python
+      - git
+      - gcc
+      - python-devel
+      - ipa-client
+      - krb5-devel
+      - libpq-devel
+    state: present
+
+- name: Install the .bashrc
+  copy:
+    src: .bashrc
+    dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: get fedocal
+  git:
+    repo: https://pagure.io/fedocal.git
+    dest: /home/vagrant/fedocal
+
+- name: install fedocal requirements
+  pip:
+    requirements: /home/vagrant/fedocal/requirements.txt
+
+- name: Enroll system as IPA client
+  shell: ipa-client-install --hostname fedocal.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
+
+- name: Generate and get SSL cert
+  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/fedocal.tinystage.test
+
+- name: Check the cert is there
+  wait_for:
+    path: /etc/pki/tls/certs/server.pem
+    state: present
+
+- name: Check the key is there
+  wait_for:
+    path: /etc/pki/tls/private/server.key
+    state: present
+
+# not sure of how to do this another way, but without this, oidc_register fails
+- name: Put tinystage root CA in the list of CA's for httplib2
+  shell: cat /etc/ipa/ca.crt >> /usr/local/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+
+- name: register the application with oidc-register
+  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://fedocal.tinystage.test
+  args:
+    chdir: /home/vagrant/fedocal
+
+- name: copy the config file
+  copy:
+    src: fedocal.cfg
+    dest: /home/vagrant/fedocal.cfg
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: copy the alembic config file
+  copy:
+    src: alembic.ini
+    dest: /home/vagrant/alembic.ini
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+# runserver.py in the fedocal repo doesnt have key and cert params
+# that is all we add in this patched runserver.new.py
+- name: copy the the patched runserver.new.py
+  copy:
+    src: runserver.new.py
+    dest: /home/vagrant/fedocal/runserver.new.py
+
+- name: Install the systemd unit files for election services
+  copy:
+      src: "{{ item }}"
+      dest: /etc/systemd/system/{{ item }}
+      mode: 0644
+  with_items:
+      - fedocal.service
+
+- name: set default client keytab in krb5.conf
+  lineinfile:
+    path: /etc/krb5.conf
+    insertafter: 'default_ccache_name.*'
+    line: '  default_client_keytab_name = FILE:/etc/krb5.keytab'
+
+- name: create the database
+  shell: python createdb.py
+  environment:
+    FEDOCAL_CONFIG: /home/vagrant/fedocal.cfg
+  args:
+    chdir: /home/vagrant/fedocal
+
+- name: Start fedocal service using systemd
+  systemd:
+    state: started
+    name: fedocal
+    daemon_reload: yes
+    enabled: yes
