@@ -69,13 +69,6 @@
     owner: vagrant
     group: vagrant
 
-# runserver.py in the fedocal repo doesnt have key and cert params
-# that is all we add in this patched runserver.new.py
-- name: copy the the patched runserver.new.py
-  copy:
-    src: runserver.new.py
-    dest: /home/vagrant/fedocal/runserver.new.py
-
 - name: Install the systemd unit files for election services
   copy:
       src: "{{ item }}"
