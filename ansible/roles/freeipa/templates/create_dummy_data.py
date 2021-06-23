@@ -20,6 +20,7 @@ groups = {
     "developers": 80,
     "designers": 30,
     "elections": 10,
+    "sysadmin-calendar": 10,
     "infra": 20,
     "QA": 20,
     "translators": 10,
