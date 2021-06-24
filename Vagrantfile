@@ -1,6 +1,5 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-print "ruby #{ RUBY_VERSION }p#{ RUBY_PATCHLEVEL }"
 
 ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 
