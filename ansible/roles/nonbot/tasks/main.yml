@@ -18,7 +18,7 @@
 # https://kojipkgs.fedoraproject.org//work/tasks/6262/68326262/python3-sgmllib3k-1.0.0-2.el8.noarch.rpm
 - name: Install RPM packages
   dnf:
-      name: ['limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'https://kojipkgs.fedoraproject.org//packages/supybot-meetbot/0.3/1.el8/noarch/supybot-meetbot-0.3-1.el8.noarch.rpm', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc', 'gssproxy', 'ipa-client']
+      name: ['limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'supybot-meetbot', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc', 'gssproxy', 'ipa-client']
       disable_gpg_check: yes
       state: present
 
