@@ -160,6 +160,20 @@
     path: /etc/pki/tls/private/server.key
     state: present
 
+- name: Allow apache to access the public directory
+  file:
+    path: /var/lib/ipsilon/idp
+    group: apache
+    mode: g+x
+    state: directory
+
+- name: Allow access to the public directory
+  file:
+    path: /var/lib/ipsilon/idp/public
+    mode: a+rX
+    state: directory
+    recurse: yes
+
 - name: Enable and restart Apache
   systemd:
     state: restarted

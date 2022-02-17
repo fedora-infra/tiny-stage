@@ -34,14 +34,22 @@ def before_request():
 @OIDC.require_login
 def logged_in():
 
-    return flask.Response(f"You are now logged in. Try to logout by going to http://localhost:5000/logout {OIDC.user_getfield('email')} {OIDC.user_getfield('zoneinfo')} {OIDC.user_getfield('preferred_username')}")
+    return flask.Response(f"""
+        <p>You are now logged in. <a href="/logout">Logout</a>.</p>
+        <p>Data:</p>
+        <pre>
+        Email: {OIDC.user_getfield('email')}
+        Username: {OIDC.user_getfield('preferred_username')}
+        Timezone: {OIDC.user_getfield('zoneinfo')}
+        </pre>
+        """)
 
 @app.route("/")
 def landing_page():
     if OIDC.user_loggedin:
         return flask.redirect(flask.url_for('.logged_in'))
     else:
-        return flask.Response("Landing page, try to go to <a href='https://oidctest.tinystage.test/login'>https://oidctest.tinystage.test/login</a>")
+        return flask.Response("Landing page, try to <a href='/login'>login</a>.")
 
 @app.route("/login")
 def login():
