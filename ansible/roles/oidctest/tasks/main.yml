@@ -17,10 +17,14 @@
     group: vagrant
 
 - name: Enroll system as IPA client
-  shell: ipa-client-install --hostname oidctest.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
+  shell:
+    cmd: ipa-client-install --hostname oidctest.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
+    creates: /etc/ipa/default.conf
 
 - name: Generate and get SSL cert
-  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/oidctest.tinystage.test
+  shell:
+    cmd: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/oidctest.tinystage.test
+    creates: /etc/pki/tls/certs/server.pem
 
 - name: Check the cert is there
   wait_for:
@@ -37,11 +41,19 @@
     name: oidc-register
 
 # not sure of how to do this another way, but without this, oidc_register fails
+- name: Get the content of the CA cert
+  slurp:
+    src: /etc/ipa/ca.crt
+  register: ca_crt
 - name: Put tinystage root CA in the list of CA's for httplib2
-  shell: cat /etc/ipa/ca.crt >> /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+  blockinfile:
+    block: "{{ ca_crt.content | b64decode }}"
+    path: /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
-  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://oidctest.tinystage.test/oidc_callback
+  shell:
+    cmd: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://oidctest.tinystage.test/oidc_callback
+    creates: /home/vagrant/client_secrets.json
   become: yes
   become_user: vagrant
   args:
