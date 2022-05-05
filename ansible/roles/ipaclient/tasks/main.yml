@@ -9,19 +9,9 @@
     - packages
 
 - name: Enroll system as IPA client
-  shell: |
-    ipa-client-install --uninstall --unattended
-    ipa-client-install \
-      --hostname ipaclient.tinystage.test \
-      --domain tinystage.test \
-      --realm {{ krb_realm }} \
-      --server ipa.tinystage.test \
-      -p {{ ipa_admin_user }} \
-      -w {{ ipa_admin_password }} \
-      --unattended \
-      --no-ntp \
-      --force-join \
-      --mkhomedir
+  command: ipa-client-install --hostname ipaclient.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} --unattended --no-ntp --force-join --mkhomedir
+  args:
+    creates: /etc/ipa/default.conf
   tags:
     - ipa/client
     - config

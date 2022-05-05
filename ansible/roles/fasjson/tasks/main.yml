@@ -41,7 +41,7 @@
 
 - name: Install the .bashrc
   copy:
-    src: .bashrc
+    src: bashrc
     dest: /home/vagrant/.bashrc
     mode: 0644
     owner: vagrant
@@ -54,13 +54,14 @@
     mode: 0644
     owner: vagrant
     group: vagrant
+  notify:
+    - restart httpd
 
-- name: Uninstall any old clients
-  shell: ipa-client-install --uninstall --unattended
-  ignore_errors: yes
 
 - name: Enroll system as IPA client
   shell: ipa-client-install --hostname fasjson.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
+  args:
+    creates: /etc/ipa/default.conf
 
 - name: Copy the service setup script
   template:
@@ -78,6 +79,8 @@
   shell: ipa-getkeytab -p HTTP/fasjson.tinystage.test -k /var/lib/gssproxy/httpd.keytab
   args:
     creates: /var/lib/gssproxy/httpd.keytab
+  notify:
+    - restart gssproxy
 
 - name: Set the correct permissions on keytab
   file:
@@ -85,6 +88,8 @@
     owner: root
     group: root
     mode: 0640
+  notify:
+    - restart gssproxy
 
 - name: Copy gssproxy conf
   copy:
@@ -93,10 +98,12 @@
     mode: 0644
     owner: root
     group: root
+  notify:
+    - restart gssproxy
 
 - name: Enable and restart GSSProxy
   systemd:
-    state: restarted
+    state: started
     name: gssproxy
     enabled: yes
     daemon_reload: yes
@@ -108,6 +115,7 @@
 
 - name: Create temporary file
   shell: systemd-tmpfiles --create
+  creates: /run/fasjson/ccaches
 
 - name: Tune SELinux Policy
   seboolean:
@@ -118,6 +126,8 @@
     - httpd_can_connect_ldap
     - httpd_can_network_connect
     - httpd_use_fusefs
+  notify:
+    - restart httpd
 
 - name: Create Apache service
   file:
@@ -132,10 +142,12 @@
       dest: "/etc/systemd/system/httpd.service.d/fasjson.conf"
     - src: "config/httpd-fasjson.conf"
       dest: "/etc/httpd/conf.d/fasjson.conf"
+  notify:
+    - restart httpd
 
 - name: Enable and restart Apache
   systemd:
-    state: restarted
+    state: started
     name: httpd
     enabled: yes
     daemon_reload: yes
