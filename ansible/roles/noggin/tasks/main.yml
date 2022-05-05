@@ -6,7 +6,6 @@
       - fedora-messaging
       - gcc
       - git
-      - ipa-client
       - poetry
       - python3-cryptography
       - python3-devel
@@ -14,20 +13,6 @@
       - python3-pip
       - vim
       state: present
-
-- name: Enroll system as IPA client
-  shell: |
-    ipa-client-install --uninstall --unattended
-    ipa-client-install \
-      --hostname noggin.tinystage.test \
-      --domain tinystage.test \
-      --realm {{ krb_realm }} \
-      --server ipa.tinystage.test \
-      -p {{ ipa_admin_user }} \
-      -w {{ ipa_admin_password }} \
-      --unattended \
-      --no-ntp \
-      --force-join
 
 - name: Check if noggin is cloned already
   become_user: vagrant

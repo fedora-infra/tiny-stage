@@ -41,13 +41,6 @@
 #  args:
 #    chdir: /vagrant/
 
-- name: Uninstall any old clients
-  shell: ipa-client-install --uninstall --unattended
-  ignore_errors: yes
-
-- name: Enroll system as IPA client
-  shell: ipa-client-install --hostname nonbot.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
-
 - name: kinit
   shell: echo "{{ipa_admin_password}}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 

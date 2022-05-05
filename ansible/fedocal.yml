@@ -4,4 +4,7 @@
   become_method: sudo
   roles:
     - common
+    - ipa-client
+    - cert
+    - oidc-register
     - fedocal

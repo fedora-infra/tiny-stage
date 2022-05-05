@@ -7,7 +7,6 @@
 - name: Install RPM packages
   dnf:
     name:
-      - ipa-client
       - httpd
       - mod_auth_gssapi
       - mod_session
@@ -57,11 +56,6 @@
   notify:
     - restart httpd
 
-
-- name: Enroll system as IPA client
-  shell: ipa-client-install --hostname fasjson.tinystage.test --domain tinystage.test --realm {{ krb_realm }} --server ipa.tinystage.test -p {{ ipa_admin_user }} -w {{ ipa_admin_password }} -U -N --force-join
-  args:
-    creates: /etc/ipa/default.conf
 
 - name: Copy the service setup script
   template:
@@ -115,7 +109,8 @@
 
 - name: Create temporary file
   shell: systemd-tmpfiles --create
-  creates: /run/fasjson/ccaches
+  args:
+    creates: /run/fasjson/ccaches
 
 - name: Tune SELinux Policy
   seboolean:

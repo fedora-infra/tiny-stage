@@ -1,0 +1,2 @@
+redirect_path: ""
+redirect_url: https://{{ ansible_fqdn }}/{{ redirect_path }}
