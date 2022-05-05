@@ -23,6 +23,7 @@ machines = {
   "nonbot":{"operatingsystem": "centos8"},
   "fedora-messaging": {"autostart": true},
   "fedocal": {},
+  "test-auth": {},
 }
 
 Vagrant.configure(2) do |config|

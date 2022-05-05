@@ -1,0 +1,12 @@
+---
+- hosts: test-auth
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - ipa-client
+    - cert
+    - role: oidc-register
+      vars:
+        redirect_path: oidc
+    - test-auth

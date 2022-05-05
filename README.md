@@ -17,6 +17,7 @@ There are also many additional machines for development and testing purposes tha
 * mirrormanager2
 * noggin
 * nonbot (zodbot)
+* test-auth
 
 
 ## Getting Started
@@ -57,6 +58,7 @@ Current machine states:
 freeipa                   running (libvirt)
 fasjson                   running (libvirt)
 ipsilon                   running (libvirt)
+test-auth                 not created (libvirt)
 fas2ipa                   not created (libvirt)
 noggin                    not created (libvirt)
 elections                 running (libvirt)
