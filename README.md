@@ -17,8 +17,6 @@ There are also many additional machines for development and testing purposes tha
 * mirrormanager2
 * noggin
 * nonbot (zodbot)
-* oidctest
-* openidtest
 
 
 ## Getting Started
@@ -59,8 +57,6 @@ Current machine states:
 freeipa                   running (libvirt)
 fasjson                   running (libvirt)
 ipsilon                   running (libvirt)
-oidctest                  not created (libvirt)
-openidtest                not created (libvirt)
 fas2ipa                   not created (libvirt)
 noggin                    not created (libvirt)
 elections                 running (libvirt)

@@ -13,8 +13,6 @@ machines = {
   },
   "fasjson": {"autostart": true},
   "ipsilon": {"autostart": true},
-  "oidctest": {},
-  "openidtest": {},
   "fas2ipa": {
     "libvirt.memory": 4096,
   },

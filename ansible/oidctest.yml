@@ -1,9 +1,0 @@
----
-- hosts: oidctest
-  become: true
-  become_method: sudo
-  roles:
-    - common
-    - oidctest
-
-
