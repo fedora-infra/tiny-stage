@@ -13,9 +13,6 @@ machines = {
   },
   "fasjson": {"autostart": true},
   "ipsilon": {"autostart": true},
-  "fas2ipa": {
-    "libvirt.memory": 4096,
-  },
   "noggin": {},
   "elections": {},
   "mirrormanager2": {},
