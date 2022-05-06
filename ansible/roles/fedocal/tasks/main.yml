@@ -12,7 +12,7 @@
 
 - name: Install the .bashrc
   copy:
-    src: .bashrc
+    src: bashrc
     dest: /home/vagrant/.bashrc
     mode: 0644
     owner: vagrant
