@@ -1,6 +1,7 @@
 ---
 - name: Install RPM packages
   dnf:
+    # enablerepo: updates-testing
     name:
       - ipsilon
       - ipsilon-tools-ipa
