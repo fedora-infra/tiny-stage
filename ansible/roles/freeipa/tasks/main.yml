@@ -18,8 +18,11 @@
       - python-faker
     state: present
 
+# Use a timestamp to avoid confusing browsers when SSL certs have the same serial:
+# https://listman.redhat.com/archives/freeipa-users/2015-September/msg00298.html
+#
 - name: install freeipa server
-  shell: umask 022; ipa-server-install -a {{ ipa_admin_password }} --hostname=ipa.tinystage.test -r {{ krb_realm }} -p {{ krb_master_password }} -n tinystage.test -U
+  shell: umask 022; ipa-server-install -a {{ ipa_admin_password }} --hostname=ipa.tinystage.test -r {{ krb_realm }} -p {{ krb_master_password }} -n tinystage.test -U --subject 'O={{ krb_realm }} $(date +%Y%M%d%H%M%S)'
   args:
     creates: /etc/ipa/default.conf
 
