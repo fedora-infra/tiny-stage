@@ -137,6 +137,11 @@
     insertafter: 'template_dir = "templates"'
     line: 'theme_dir = "/usr/share/ipsilon/themes/Fedora"'
 
+- name: Set CORS
+  copy:
+    src: cors.conf
+    dest: /etc/httpd/conf.d/cors.conf
+
 
 # we were hitting a condition where the key and cert were not there
 # yet before trying to restart apache. So we check they are here before
