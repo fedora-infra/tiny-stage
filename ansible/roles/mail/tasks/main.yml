@@ -1,0 +1,38 @@
+- name: Install RPM packages
+  dnf:
+    name:
+      - python3-devel
+      - python3-pip
+      - git
+    state: present
+
+- name: Install Sendria from pip 
+  pip:
+    name: sendria
+
+- name: Install smtpc from pip 
+  pip:
+    name: smtpc
+
+- name: Install the .bashrc
+  copy:
+    src: bashrc
+    dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Install the systemd unit
+  copy:
+      src: sendria.service
+      dest: /etc/systemd/system/sendria.service
+      mode: 0644
+  notify:
+    - restart sendria
+
+- name: Start service using systemd
+  systemd:
+    state: started
+    name: sendria
+    daemon_reload: yes
+    enabled: yes

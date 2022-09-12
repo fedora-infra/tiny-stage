@@ -21,6 +21,7 @@ machines = {
   "fedora-messaging": {"autostart": true},
   "fedocal": {},
   "test-auth": {},
+  "mail": {"autostart": true},
 }
 
 Vagrant.configure(2) do |config|
