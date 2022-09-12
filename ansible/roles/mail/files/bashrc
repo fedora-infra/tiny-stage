@@ -1,0 +1,4 @@
+# .bashrc
+
+
+alias send-test-mail="smtpc send --host mail.tinystage.test:1025 --from dude@dudemcpants.com --to hello@example.com --subject 'Welcome!' --body 'Welcome to the tinystage mail server!'"

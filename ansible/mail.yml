@@ -1,0 +1,11 @@
+---
+# *mail.tinystage.test*  is a machine that runs Sendria. To use,
+# enable your other tinystage machines to send mail to the smtp server at
+# mail.tinystage.test:1025 and it is shown in the sendria UI at
+# http://mail.tinystage.test and not actually send to the email given
+- hosts: mail
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - mail
