@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 User=root
 WorkingDirectory=/home/vagrant
-ExecStart=sendria --db /home/vagrant/mails.sqlite --http-ip 0.0.0.0 --http-port 80 --smtp-ip 0.0.0.0 --smtp-port 1025
+ExecStart=sendria --db /home/vagrant/mails.sqlite --http-ip 0.0.0.0 --http-port 8080 --smtp-ip 0.0.0.0 --smtp-port 1025
 
 [Install]
 WantedBy=multi-user.target
