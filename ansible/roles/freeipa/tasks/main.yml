@@ -22,7 +22,7 @@
 # https://listman.redhat.com/archives/freeipa-users/2015-September/msg00298.html
 #
 - name: install freeipa server
-  shell: umask 022; ipa-server-install -a {{ ipa_admin_password }} --hostname=ipa.tinystage.test -r {{ krb_realm }} -p {{ krb_master_password }} -n tinystage.test -U --subject 'O={{ krb_realm }} $(date +%Y%M%d%H%M%S)'
+  shell: umask 022; ipa-server-install -a {{ ipa_admin_password }} --hostname=ipa.tinystage.test -r {{ krb_realm }} -p {{ krb_master_password }} -n tinystage.test -U --subject 'O={{ krb_realm }} {{ ansible_date_time.iso8601_basic }}'
   args:
     creates: /etc/ipa/default.conf
 
