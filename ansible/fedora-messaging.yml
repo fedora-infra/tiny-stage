@@ -1,8 +1,0 @@
----
-- hosts: fedora-messaging
-  become: true
-  become_method: sudo
-  roles:
-    - common
-    - rabbitmq
-    - fedora-messaging

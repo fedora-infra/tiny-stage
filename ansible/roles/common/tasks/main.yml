@@ -1,6 +1,6 @@
 ---
 # try to enable epel -- this will fail on Fedora Machines, but just ignore it
-# we need epel here for fedora-messaging
+# we need epel here for nonbot
 - name: Enable EPEL
   dnf:
       name: ['epel-release']
@@ -34,4 +34,4 @@
   lineinfile:
     path: /etc/fedora-messaging/config.toml
     regexp: "amqp_url = \"amqp://\""
-    line: "amqp_url = \"amqp://fedoramessages:fedoramessages@fedora-messaging.tinystage.test\""
+    line: "amqp_url = \"amqp://fedoramessages:fedoramessages@tinystage.tinystage.test\""
