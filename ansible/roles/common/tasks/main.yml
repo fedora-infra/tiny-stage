@@ -48,4 +48,4 @@
   lineinfile:
     path: /etc/fedora-messaging/config.toml
     regexp: "amqp_url = \"amqp://\""
-    line: "amqp_url = \"amqp://fedoramessages:fedoramessages@tinystage.tinystage.test\""
+    line: "amqp_url = \"amqp://fedoramessages:fedoramessages@tinystage.tinystage.test\"" # gitleaks:allow
