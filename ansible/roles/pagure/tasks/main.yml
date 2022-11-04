@@ -1,0 +1,320 @@
+---
+- name: Install helpful development packages
+  dnf:
+    name:
+        - git
+        - python3
+        - python3-devel
+        - libgit2-devel
+        - redis
+        - libjpeg-devel
+        - gcc
+        - libffi-devel
+        - redhat-rpm-config
+        - fasjson-client
+    state: present
+
+
+- name: Git checkout
+  ansible.builtin.git:
+    repo: 'https://pagure.io/pagure.git'
+    dest: /home/vagrant/pagure
+
+# - include: postgres.yml
+
+- name: install elections requirements
+  pip:
+    requirements: /home/vagrant/pagure/requirements.txt
+
+- name: create all the directories used by pagure
+  file: state=directory
+        path={{ item }}
+  with_items:
+  - /home/vagrant/pagure/lcl/repos
+  - /home/vagrant/pagure/lcl/remotes
+  - /home/vagrant/pagure/lcl/attachments
+  - /home/vagrant/pagure/lcl/releases
+
+- name: copy alembic.ini
+  copy:
+    src: alembic.ini
+    dest: /home/vagrant/pagure/alembic.ini
+
+
+- name: create database
+  command: python createdb.py --initial alembic.ini
+  args:
+    chdir: /home/vagrant/pagure/
+
+
+- name: Enable and redis
+  systemd:
+    state: started
+    name: redis
+    enabled: yes
+    daemon_reload: yes
+
+- name: Install the systemd unit files for election services
+  copy:
+      src: "{{ item }}"
+      dest: /etc/systemd/system/{{ item }}
+      mode: 0644
+  with_items:
+      - pagure_worker.service
+      - pagure.service
+
+- name: Enable and start worker
+  systemd:
+    state: started
+    name: pagure_worker
+    enabled: yes
+    daemon_reload: yes
+
+- name: Enable and start pagure 
+  systemd:
+    state: started
+    name: pagure
+    enabled: yes
+    daemon_reload: yes
+
+- name: kinit
+  shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+
+- name: copy alembic.ini
+  copy:
+    src: dev-data.py
+    dest: /home/vagrant/pagure/dev-data.py
+
+- name: create data
+  command: python dev-data.py
+  args:
+    chdir: /home/vagrant/pagure/
+
+
+# - name: Install Pagure development packages
+#   dnf:
+#     name:
+#       - python3-alembic
+#       - python3-arrow
+#       - python3-binaryornot
+#       - python3-bleach
+#       - python3-blinker
+#       - python3-celery
+#       - python3-chardet
+#       - python3-cryptography
+#       - python3-docutils
+#       - python3-email-validator
+#       - python3-eventlet
+#       - python3-fedora-flask
+#       - python3-flask
+#       - python3-flask-oidc
+#       - python3-flask-wtf
+#       - python3-jinja2
+#       - python3-markdown
+#       - python3-munch
+#       - python3-mock
+#       - python3-openid-cla
+#       - python3-openid-teams
+#       - python3-pillow
+#       - python3-pip
+#       - python3-psutil
+#       - python3-pygit2
+#       - python3-redis
+#       - python3-sqlalchemy
+#       - python3-straight-plugin
+#       - python3-virtualenvwrapper
+#       - python3-whitenoise
+#       - python3-wtforms
+#       - python3-devel
+#       - python3-devel
+#       - python3-bcrypt
+#       - redhat-rpm-config
+#     state: latest
+
+# - name: Create the folder where we'll place the symbolic link for pagure
+#   file:
+#     path: /usr/local/lib/python3.9/site-packages/
+#     state: directory
+
+# - name: Create symbolic link for pagure to be in the python path
+#   file:
+#     src: /srv/pagure/pagure
+#     dest: /usr/local/lib/python3.9/site-packages/pagure
+#     state: link
+
+# - name: Create symbolic link for python to be py3 by default
+#   file:
+#     src: /usr/bin/python3
+#     dest: /usr/bin/python
+#     state: link
+
+# # Add various helpful configuration files
+# - name: Install a custom bashrc
+#   become_user: "{{ ansible_env.SUDO_USER }}"
+#   copy: src=bashrc dest=/home/{{ ansible_env.SUDO_USER }}/.bashrc
+
+# - name: Install the message of the day
+#   copy: src=motd dest=/etc/motd
+
+# - name: Remove the motd duplicate
+#   pamd:
+#     name: sshd
+#     type: session
+#     control: optional
+#     module_path: pam_motd.so
+#     state: absent
+
+# - name: populate bash history
+#   become_user: "{{ ansible_env.SUDO_USER }}"
+#   copy: src=bash_history dest=/home/{{ ansible_env.SUDO_USER }}/.bash_history
+
+
+# # Configure pagure
+
+# - name: Create the git user and group
+#   command: useradd --create-home --home-dir=/srv/git/ git
+#            creates=/srv/git/
+
+# - name: create the /attachments folder
+#   file: state=directory
+#         path=/srv/attachments
+#         owner=git group=git mode=0775
+
+# - name: Adjust owner of /srv/git
+#   file: name=/srv/git state=directory recurse=yes owner=git group=git
+
+# - name: create all the directories used by pagure
+#   file: state=directory
+#         path={{ item }}
+#         owner=git group=git mode=0775
+#   with_items:
+#   - /srv/git/repositories/
+#   - /srv/git/repositories/forks
+#   - /srv/git/repositories/docs
+#   - /srv/git/repositories/tickets
+#   - /srv/git/repositories/requests
+#   - /srv/git/remotes
+#   - /var/www/releases
+#   - /var/www/archives
+#   - /srv/tmp
+
+# - name: create the /etc/pagure folder for the config
+#   file: state=directory
+#         path=/etc/pagure
+#         owner=git group=git mode=0775
+
+
+# # Set things up for the mirroring feature
+
+# - name: create the `paguremirroring` group
+#   group:
+#       name: paguremirroring
+#       state: present
+
+# - name: create the `paguremirroring` user
+#   user:
+#       name: paguremirroring
+#       group: paguremirroring
+#       groups: paguremirroring,git
+#       shell: /bin/nologin
+#       home: /srv/mirror
+
+
+# # Configure the web app
+
+# - name: Install the pagure configuration
+#   copy:
+#     src: pagure.cfg
+#     dest: /etc/pagure/pagure.cfg
+#     owner: git
+#     group: git
+#     mode: 0644
+
+# - name: Add a working copy of alembic.ini
+#   copy:
+#     src: /srv/pagure/files/alembic.ini
+#     dest: /etc/pagure/alembic.ini
+#     owner: git
+#     group: git
+#     mode: 0644
+#     remote_src: True
+
+# - name: Configure alembic to use our development database
+#   replace:
+#     dest: /etc/pagure/alembic.ini
+#     regexp: "sqlalchemy.url = sqlite:////var/tmp/pagure_dev.sqlite"
+#     replace: "sqlalchemy.url = sqlite:////srv/git/pagure_dev.sqlite"
+
+# - name: Configure alembic to point to the pagure migration folder
+#   replace:
+#     dest: /etc/pagure/alembic.ini
+#     regexp: "script_location = /usr/share/pagure/alembic"
+#     replace: "script_location = /srv/pagure/alembic/"
+
+# - name: Create the Pagure database
+#   become_user: git
+#   command: python3 /srv/pagure/createdb.py
+#   environment:
+#       PAGURE_CONFIG: /etc/pagure/pagure.cfg
+#   args:
+#     creates: /srv/git/pagure_dev.sqlite
+
+# - name: Stamp the database with its current migration
+#   become_user: git
+#   shell: alembic-3 stamp $(alembic-3 heads | awk '{ print $1 }')
+#   args:
+#     chdir: "/etc/pagure"
+
+# - name: Install the Pagure service files for systemd
+#   copy:
+#     src: "{{ item }}"
+#     dest: /etc/systemd/system/{{ item }}
+#   with_items:
+#     - pagure.service
+#     - pagure-docs.service
+#     - pagure_ci.service
+#     - pagure_ev.service
+#     - pagure_webhook.service
+#     - pagure_worker.service
+#     - pagure_authorized_keys_worker.service
+
+# - name: let paguremirroring read the pagure config
+#   command: /usr/bin/setfacl -m user:paguremirroring:rx /etc/pagure/pagure.cfg
+
+# - name: Add default facl so apache can read git repos
+#   acl: default=yes etype=user entity=apache permissions="rx" name=/srv/git state=present
+#   register: acl_updates
+
+# - name: Manually fix current default ACLs since Ansible doesnt know recursive acls
+#   when: acl_updates.changed
+#   command: /usr/bin/setfacl -Rdm user:apache:rx /srv/git
+
+# - name: Manually fix current ACLs since Ansible doesnt know recursive acls
+#   when: acl_updates.changed
+#   command: /usr/bin/setfacl -Rm user:apache:rx /srv/git
+
+# - name: Turn off SELinux, this dev box is doing too many unwdily things
+#   command: setenforce 0
+
+# - name: Turn off SELinux accross reboot
+#   replace:
+#     dest: /etc/selinux/config
+#     regexp: "SELINUX=enforcing"
+#     replace: "SELINUX=permissive"
+
+# - name: Enable and start the all services needed
+#   systemd:
+#     daemon_reload: yes
+#     name: "{{ item }}"
+#     enabled: True
+#     state: started
+#   with_items:
+#     - httpd
+#     - redis
+#     - pagure
+#     - pagure-docs
+#     - pagure_ci
+#     - pagure_ev
+#     - pagure_webhook
+#     - pagure_worker
+#     - pagure_authorized_keys_worker

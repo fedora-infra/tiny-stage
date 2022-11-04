@@ -1,0 +1,9 @@
+---
+# *src.tinystage.test*  is a machine that runs pagure to replicate src.fedoraproject.org
+- hosts: src
+  become: true
+  become_method: sudo
+  roles:
+    - common
+    - ipa-client
+    - pagure

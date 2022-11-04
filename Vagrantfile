@@ -20,7 +20,9 @@ machines = {
   "nonbot":{"operatingsystem": "centos8"},
   "tinystage": {"autostart": true},
   "fedocal": {},
-  "test-auth": {},}
+  "test-auth": {},
+  "src": {},
+}
 
 Vagrant.configure(2) do |config|
   config.hostmanager.enabled = true

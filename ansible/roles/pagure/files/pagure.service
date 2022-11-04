@@ -1,0 +1,11 @@
+[Unit]
+Description=The Pagure web service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/vagrant/pagure
+ExecStart=python3 /home/vagrant/pagure/runserver.py --host 0.0.0.0 --debug
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
