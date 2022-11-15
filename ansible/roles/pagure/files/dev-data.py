@@ -5,6 +5,10 @@
 
 from __future__ import print_function, unicode_literals, absolute_import
 
+import os
+import pygit2
+
+import tests
 import pagure
 import pagure.lib.model
 import pagure.lib.query
@@ -18,6 +22,12 @@ userslist = []
 
 from fasjson_client import Client
 c = Client('http://fasjson.tinystage.test/fasjson', principal='admin@TINYSTAGE.TEST')
+
+def create_projects_git(folder, project):
+    repo_path = os.path.join(folder, f'{project}')
+    if not os.path.exists(repo_path):
+        os.makedirs(repo_path)
+    pygit2.init_repository(repo_path, bare=True)
 
 def insert_data(session):
     _config["EMAIL_SEND"] = False
@@ -98,19 +108,36 @@ def insert_data(session):
             print(f"adding {project} for user {thisusername} in namespace {namespace}")
             session.add(p)
             session.commit()
+
         except IntegrityError as e:
-            print(e)
-            print("error")
             session.rollback()
         
+        projectname = os.path.join(namespace, f'{project}.git')
+        create_projects_git(_config["GIT_FOLDER"], projectname)
+
+        thegroup = grouplist[int.from_bytes(bytes(project,'utf-8'), byteorder='big') % len(grouplist) ]
+        
+        group = pagure.lib.query.search_groups(
+             session, pattern=None, group_name=thegroup['groupname'], group_type=None
+        )
+        repo = pagure.lib.query.get_authorized_project(session, project, namespace=namespace)
+        item = pagure.lib.model.ProjectGroup(
+        project_id=repo.id, group_id=group.id, access="commit"
+        )
+        session.add(item)
+        session.commit()
+
+
+
+
         p = pagure.lib.model.Project(
             user_id=u.id,
             name=project,
             is_fork=False,
             parent_id=None,
-            description=f"{project} {namespace}",
+            description=f"{project} rpm",
             namespace='rpm',
-            hook_token=project
+            hook_token=f"{project} rpm"
         )
         p.close_status = ["Invalid", "Insufficient data", "Fixed", "Duplicate"]
         try:
@@ -118,18 +145,23 @@ def insert_data(session):
             session.add(p)
             session.commit()
         except IntegrityError as e:
-            print(e)
-            print("error")
             session.rollback()
 
+        projectname = os.path.join("rpm", f'{project}.git')
+        create_projects_git(_config["GIT_FOLDER"], projectname)
 
-        # group = pagure.lib.query.search_groups(
-        #     session, pattern=None, group_name="rel-eng", group_type=None
-        # )
-        # repo = pagure.lib.query.get_authorized_project(session, "test")
-        # item = pagure.lib.model.ProjectGroup(
-        #     project_id=repo.id, group_id=group.id, access="commit"
-        # )
+        thegroup = grouplist[int.from_bytes(bytes(project,'utf-8'), byteorder='big') % len(grouplist) ]
+        group = pagure.lib.query.search_groups(
+             session, pattern=None, group_name=thegroup['groupname'], group_type=None
+        )
+        repo = pagure.lib.query.get_authorized_project(session, project, namespace='rpm')
+        item = pagure.lib.model.ProjectGroup(
+        project_id=repo.id, group_id=group.id, access="commit"
+        )
+        session.add(item)
+        session.commit()
+
+
 
 
 if __name__ == "__main__":

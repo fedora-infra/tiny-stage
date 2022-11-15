@@ -13,6 +13,8 @@
         - redhat-rpm-config
         - fasjson-client
         - python-pygit2
+        - python-mock
+        - python-beautifulsoup4
     state: present
 
 
@@ -44,10 +46,16 @@
   - /home/vagrant/pagure/lcl/attachments
   - /home/vagrant/pagure/lcl/releases
 
+
 - name: copy alembic.ini
   copy:
     src: alembic.ini
     dest: /home/vagrant/pagure/alembic.ini
+
+- name: copy pagure.cfg
+  copy:
+    src: pagure.cfg
+    dest: /home/vagrant/pagure/lcl/pagure.cfg
 
 
 - name: create database
