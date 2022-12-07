@@ -1,4 +1,8 @@
 ---
+- name: add fmn vhost
+  rabbitmq_vhost:
+    name: /fmn
+    state: present
 
 - name: Create a fedoramessages user in RabbitMQ
   rabbitmq_user:
@@ -6,6 +10,19 @@
     password: fedoramessages
     tags: administrator
     vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    state: present
+  notify:
+    - reload rabbitmq
+
+- name: update permissions for the fmn vhost
+  rabbitmq_user:
+    user: fedoramessages
+    password: fedoramessages
+    tags: administrator
+    vhost: /fmn
     configure_priv: .*
     read_priv: .*
     write_priv: .*
