@@ -30,13 +30,13 @@
     cmd: poetry install
     chdir: noggin
 
-- name: Install the .bashrc
+- name: Install the bashrc
   copy:
     src: .bashrc
-    dest: /home/vagrant/.bashrc
+    dest: /etc/profile.d/vagrant-noggin.sh
     mode: 0644
-    owner: vagrant
-    group: vagrant
+    owner: root
+    group: root
 
 - name: Install noggin.cfg
   become_user: vagrant

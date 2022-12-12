@@ -98,10 +98,10 @@
     daemon_reload: yes
     enabled: yes
 
-- name: Install the .bashrc
+- name: Install the bashrc
   copy:
       src: .bashrc
-      dest: /home/vagrant/.bashrc
+      dest: /etc/profile.d/vagrant-nonbot.sh
       mode: 0644
-      owner: vagrant
-      group: vagrant
+      owner: root
+      group: root

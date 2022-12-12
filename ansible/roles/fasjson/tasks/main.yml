@@ -38,13 +38,13 @@
 - pip:
     name: flask
 
-- name: Install the .bashrc
+- name: Install the bashrc
   copy:
     src: bashrc
-    dest: /home/vagrant/.bashrc
+    dest: /etc/profile.d/vagrant-fasjson.sh
     mode: 0644
-    owner: vagrant
-    group: vagrant
+    owner: root
+    group: root
 
 - name: Copy wsgi
   copy:

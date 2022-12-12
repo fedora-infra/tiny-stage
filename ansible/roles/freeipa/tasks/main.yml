@@ -56,13 +56,13 @@
   args:
     creates: /var/lib/ipa/backup/backup-clean
 
-- name: Install the .bashrc
+- name: Install the bashrc
   template:
       src: bashrc
-      dest: /home/vagrant/.bashrc
+      dest: /etc/profile.d/vagrant-freeipa.sh
       mode: 0644
-      owner: vagrant
-      group: vagrant
+      owner: root
+      group: root
 
 - name: copy the create data script
   template:

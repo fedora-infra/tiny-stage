@@ -10,13 +10,13 @@
       - libpq-devel
     state: present
 
-- name: Install the .bashrc
+- name: Install the bashrc
   copy:
     src: bashrc
-    dest: /home/vagrant/.bashrc
+    dest: /etc/profile.d/vagrant-fedocal.sh
     mode: 0644
-    owner: vagrant
-    group: vagrant
+    owner: root
+    group: root
 
 - name: get fedocal
   git:
