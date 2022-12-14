@@ -42,6 +42,11 @@
 
 - name: Remove the admin account's expiration date
   command: ipa user-mod admin --setattr krbPasswordExpiration=
+  register: ipa_user_mod_result
+  changed_when: "ipa_user_mod_result.rc == 0"
+  failed_when: >-
+    ipa_user_mod_result.rc != 0
+    and ipa_user_mod_result.stderr != "ipa: ERROR: no modifications to be performed"
 
 - name: kdestroy
   command: kdestroy -A
