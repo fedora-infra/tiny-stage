@@ -111,12 +111,12 @@ def insert_data(session):
 
         except IntegrityError as e:
             session.rollback()
-        
+
         projectname = os.path.join(namespace, f'{project}.git')
         create_projects_git(_config["GIT_FOLDER"], projectname)
 
         thegroup = grouplist[int.from_bytes(bytes(project,'utf-8'), byteorder='big') % len(grouplist) ]
-        
+
         group = pagure.lib.query.search_groups(
              session, pattern=None, group_name=thegroup['groupname'], group_type=None
         )
@@ -136,25 +136,25 @@ def insert_data(session):
             is_fork=False,
             parent_id=None,
             description=f"{project} rpm",
-            namespace='rpm',
+            namespace='rpms',
             hook_token=f"{project} rpm"
         )
         p.close_status = ["Invalid", "Insufficient data", "Fixed", "Duplicate"]
         try:
-            print(f"adding {project} for user {thisusername} in namespace rpm")
+            print(f"adding {project} for user {thisusername} in namespace rpms")
             session.add(p)
             session.commit()
         except IntegrityError as e:
             session.rollback()
 
-        projectname = os.path.join("rpm", f'{project}.git')
+        projectname = os.path.join("rpms", f'{project}.git')
         create_projects_git(_config["GIT_FOLDER"], projectname)
 
         thegroup = grouplist[int.from_bytes(bytes(project,'utf-8'), byteorder='big') % len(grouplist) ]
         group = pagure.lib.query.search_groups(
              session, pattern=None, group_name=thegroup['groupname'], group_type=None
         )
-        repo = pagure.lib.query.get_authorized_project(session, project, namespace='rpm')
+        repo = pagure.lib.query.get_authorized_project(session, project, namespace='rpms')
         item = pagure.lib.model.ProjectGroup(
         project_id=repo.id, group_id=group.id, access="commit"
         )
