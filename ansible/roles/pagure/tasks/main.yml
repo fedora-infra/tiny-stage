@@ -22,6 +22,7 @@
   ansible.builtin.git:
     repo: 'https://pagure.io/pagure.git'
     dest: /home/vagrant/pagure
+    force: true
 
 # installing pygit2 from pip was causing issues, so we just
 # use the RPM version instead. Here we just yank that line
@@ -57,6 +58,11 @@
     src: pagure.cfg
     dest: /home/vagrant/pagure/lcl/pagure.cfg
 
+
+- name: wipe database
+  file:
+    path: /var/tmp/pagure_dev.sqlite
+    state: absent
 
 - name: create database
   command: python createdb.py --initial alembic.ini
