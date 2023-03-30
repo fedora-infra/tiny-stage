@@ -26,7 +26,7 @@
 # installing pygit2 from pip was causing issues, so we just
 # use the RPM version instead. Here we just yank that line
 # from  our checked out requirements.txt
-- name: remove pygit2 fron pip install
+- name: remove pygit2 from pip install
   ansible.builtin.lineinfile:
     path: /home/vagrant/pagure/requirements.txt
     regexp: '^pygit2'
@@ -87,7 +87,7 @@
     enabled: yes
     daemon_reload: yes
 
-- name: Enable and start pagure 
+- name: Enable and start pagure
   systemd:
     state: started
     name: pagure
@@ -97,7 +97,7 @@
 - name: kinit
   shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
-- name: copy alembic.ini
+- name: install dev data creation script
   copy:
     src: dev-data.py
     dest: /home/vagrant/pagure/dev-data.py
