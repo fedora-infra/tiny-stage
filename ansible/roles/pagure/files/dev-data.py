@@ -43,14 +43,14 @@ def insert_data(session):
             token=None,
             default_email=user['emails'][0],
         )
-        
+
         try:
             print(f"adding user {user['username']}")
             session.add(u)
             session.commit()
         except IntegrityError:
             session.rollback()
-    
+
     grouplist = c.list_groups().result
 
     for group in grouplist:
@@ -77,7 +77,7 @@ def insert_data(session):
             u = pagure.lib.query.get_user(
                 session, key=member['username']
             )
-            
+
             try:
                 print(f"adding user {member['username']} to group {group['groupname']}")
                 session.add(pagure.lib.model.PagureUserGroup(user_id=u.id, group_id=g.id))
