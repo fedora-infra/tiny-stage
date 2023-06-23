@@ -32,7 +32,7 @@
 
 - name: Install the bashrc
   copy:
-    src: .bashrc
+    src: bashrc
     dest: /etc/profile.d/vagrant-noggin.sh
     mode: 0644
     owner: root
