@@ -39,11 +39,50 @@
   command:
     cmd: ./install.sh
     chdir: /opt/ipsilon-fedora
-    creates: /usr/lib/python{{ py3ver }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
+    creates: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
 
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
+
+- name: Create the ipsilon service in IPA
+  shell: ipa service-add IPSILON/{{ ansible_fqdn }} --force
+  register: result
+  changed_when: '"Added service" in result.stdout'
+  failed_when: '" already exists" not in result.stderr or result.rc != 1'
+
+- name: Get service keytab for HTTPd
+  shell: ipa-getkeytab -p IPSILON/{{ ansible_fqdn }} -k /var/lib/gssproxy/ipsilon.keytab
+  args:
+    creates: /var/lib/gssproxy/ipsilon.keytab
+  notify:
+    - restart gssproxy
+
+- name: Set the correct permissions on keytab
+  file:
+    path: /var/lib/gssproxy/ipsilon.keytab
+    owner: root
+    group: root
+    mode: 0640
+  notify:
+    - restart gssproxy
+
+- name: Copy gssproxy conf
+  copy:
+    src: gssproxy.conf
+    dest: /etc/gssproxy/80-ipsilon.conf
+    mode: 0644
+    owner: root
+    group: root
+  notify:
+    - restart gssproxy
+
+- name: Enable and restart GSSProxy
+  systemd:
+    state: started
+    name: gssproxy
+    enabled: yes
+    daemon_reload: yes
 
 - name: install ipsilon
   command:
@@ -51,11 +90,15 @@
           --secure no
           --server-debugging
           --admin-user={{ ipa_admin_user }}
-          --ipa=yes
           --openidc=yes
           --openid=yes
           --saml2=yes
+          --gssapi=yes
+          --gssapi-httpd-keytab=/var/lib/gssproxy/ipsilon.keytab
+          --pam=yes
+          --info-sssd=yes
     creates: /etc/ipsilon/idp/ipsilon.conf
+          # --ipa=yes
 
 - name: overwrite ipsilon configuration
   copy:
@@ -80,28 +123,29 @@
     group: ipsilon
     mode: 0600
 
-- name: configure SSLCertificateFile in ssl.conf
-  lineinfile:
-    path: /etc/httpd/conf.d/ssl.conf
-    regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
-    line: SSLCertificateFile /etc/pki/tls/certs/server.pem
+# - name: configure SSLCertificateFile in ssl.conf
+#   lineinfile:
+#     path: /etc/httpd/conf.d/ssl.conf
+#     regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
+#     line: SSLCertificateFile /etc/pki/tls/certs/server.pem
+# 
+# - name: configure SSLCertificateKeyFile in ssl.conf
+#   lineinfile:
+#     path: /etc/httpd/conf.d/ssl.conf
+#     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
+#     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
 
-- name: configure SSLCertificateKeyFile in ssl.conf
-  lineinfile:
-    path: /etc/httpd/conf.d/ssl.conf
-    regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
-    line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
-
-- name: fix the permissions of the keytab file
-  file:
-    name: /etc/httpd/conf/http.keytab
-    owner: ipsilon
-
-- name: set default client keytab in krb5.conf
-  lineinfile:
-    path: /etc/krb5.conf
-    insertafter: 'default_ccache_name.*'
-    line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
+# - name: fix the permissions of the keytab file
+#   file:
+#     name: /etc/httpd/conf/http.keytab
+#     owner: ipsilon
+#     group: apache
+# 
+# - name: set default client keytab in krb5.conf
+#   lineinfile:
+#     path: /etc/krb5.conf
+#     insertafter: 'default_ccache_name.*'
+#     line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
 
 - name: Tune SELinux Policy
   seboolean:
@@ -143,19 +187,19 @@
     dest: /etc/httpd/conf.d/cors.conf
 
 
-# we were hitting a condition where the key and cert were not there
-# yet before trying to restart apache. So we check they are here before
-# proceeding.
-
-- name: Check the cert is there
-  wait_for:
-    path: /etc/pki/tls/certs/server.pem
-    state: present
-
-- name: Check the key is there
-  wait_for:
-    path: /etc/pki/tls/private/server.key
-    state: present
+# # we were hitting a condition where the key and cert were not there
+# # yet before trying to restart apache. So we check they are here before
+# # proceeding.
+# 
+# - name: Check the cert is there
+#   wait_for:
+#     path: /etc/pki/tls/certs/server.pem
+#     state: present
+# 
+# - name: Check the key is there
+#   wait_for:
+#     path: /etc/pki/tls/private/server.key
+#     state: present
 
 - name: Allow apache to access the public directory
   file:

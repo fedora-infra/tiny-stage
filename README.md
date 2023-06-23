@@ -5,19 +5,23 @@ Testing and developing Fedora Infra applications can be  tedious without having 
 
 As a minimum, tiny-stage creates the following machines, and configures them to talk to each other:
 
-* FreeIPA, with the FreeIPA FAS extensions installed: https://ipa.tinystage.test/
-* FASJSON (the Fedora Accounts API): http://fasjson.tinystage.test/fasjson/
-* Ipsilon: https://ipsilon.tinystage.test/idp
-* Fedora Messages
+* The `auth` VM, including:
+  * FreeIPA, with the FreeIPA FAS extensions installed: https://auth.tinystage.test/
+  * FASJSON (the Fedora Accounts API): http://auth.tinystage.test/fasjson/
+  * Ipsilon: https://auth.tinystage.test/idp
+  * Noggin: https://auth.tinystage.test/noggin
+  * Test-Auth: https://auth.tinystage.test/test-auth
+* The `tinystage` VM, including:
+  * The Fedora Messaging broker (RabbitMQ)
+  * Sendria, a SMTP collector
 
 There are also many additional machines for development and testing purposes that are not created by default. these are:
 
 * elections
-* fas2ipa
 * mirrormanager2
-* noggin
 * nonbot (zodbot)
-* test-auth
+* fedocal
+* src
 
 
 ## Getting Started
@@ -55,17 +59,14 @@ To check what machines are currently running, use the command:
 $ vagrant status
 Current machine states:
 
-freeipa                   running (libvirt)
-fasjson                   running (libvirt)
-ipsilon                   running (libvirt)
-test-auth                 not created (libvirt)
-fas2ipa                   not created (libvirt)
-noggin                    not created (libvirt)
+auth                      running (libvirt)
 elections                 running (libvirt)
 mirrormanager2            not created (libvirt)
 ipaclient                 not created (libvirt)
 nonbot                    not created (libvirt)
-fedora-messaging          running (libvirt)
+fedocal                   not created (libvirt)
+src                       not created (libvirt)
+tinystage                 running (libvirt)
 
 This environment represents multiple VMs. The VMs are all listed
 above with their current state. For more information about a specific

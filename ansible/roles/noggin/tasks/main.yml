@@ -2,6 +2,8 @@
 - name: Install RPM packages
   dnf:
       name:
+      - httpd
+      - python3-mod_wsgi
       - freeipa-server
       - fedora-messaging
       - gcc
@@ -11,24 +13,29 @@
       - python3-devel
       - python3-flask
       - python3-pip
-      - vim
+      - python3-whitenoise
+      - python3-backoff
+      - python3-email-validator
+      - python3-flask-mail
+      - python3-flask-talisman
+      - python3-flask-wtf
+      - python3-jwt
+      - python3-pyotp
+      - python3-wtforms
+      - python3-flask-babel
+      - python3-babel
+      - babel
       state: present
 
-- name: Check if noggin is cloned already
-  become_user: vagrant
-  stat: path=noggin
-  register: noggin_dir
+- name: Allow apache to see /srv
+  sefcontext:
+    target: "/srv(/.*)?"
+    setype: httpd_sys_content_t
 
-- name: Clone noggin repository
-  become_user: vagrant
-  command: git clone https://github.com/fedora-infra/noggin.git
-  when: not (noggin_dir.stat.exists and noggin_dir.stat.isdir)
-
-- name: install python deps with poetry
-  become_user: vagrant
-  command:
-    cmd: poetry install
-    chdir: noggin
+- name: Install Noggin with Pip
+  pip:
+    name:
+      - noggin-aaa
 
 - name: Install the bashrc
   copy:
@@ -39,26 +46,45 @@
     group: root
 
 - name: Install noggin.cfg
-  become_user: vagrant
   template:
     src: noggin.cfg
-    dest: noggin.cfg
+    dest: /etc/noggin.cfg
+
+- name: Copy wsgi
+  copy:
+    src: noggin.wsgi
+    dest: /srv/noggin.wsgi
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+  notify:
+    - restart httpd
 
 - name: compile the translations
-  become_user: vagrant
   command:
-    cmd: poetry run pybabel compile -d /home/vagrant/noggin/noggin/translations
-    chdir: noggin
+    cmd: pybabel compile -d /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations
+    creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
 
-- name: Install the systemd unit files for noggin services
+- name: Tune SELinux Policy
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_network_connect
+  notify:
+    - restart httpd
+
+- name: Copy configs for Apache
   copy:
-    src: noggin.service
-    dest: /etc/systemd/system/noggin.service
-    mode: 0644
+    src: httpd.conf
+    dest: /etc/httpd/conf.d/noggin.conf
+  notify:
+    - restart httpd
 
-- name: Start noggin service using systemd
+- name: Enable and restart Apache
   systemd:
     state: started
-    name: noggin
-    daemon_reload: yes
+    name: httpd
     enabled: yes
+    daemon_reload: yes

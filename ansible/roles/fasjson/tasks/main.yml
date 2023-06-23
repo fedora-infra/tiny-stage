@@ -1,9 +1,4 @@
 ---
-- name: upgrade all packages
-  dnf:
-    name: "*"
-    state: latest
-
 - name: Install RPM packages
   dnf:
     name:
@@ -32,11 +27,10 @@
     target: "/srv(/.*)?"
     setype: httpd_sys_content_t
 
-- pip:
-    name: fasjson
-
-- pip:
-    name: flask
+- name: Install fasjson with Pip
+  pip:
+    name:
+      - fasjson
 
 - name: Install the bashrc
   copy:
@@ -67,18 +61,18 @@
   shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 - name: Create the service in IPA
-  command: bash /srv/setup-fasjson-service.sh
+  command: bash /srv/setup-fasjson-service.sh FASJSON/{{ ansible_fqdn }}
 
 - name: Get service keytab for HTTPd
-  shell: ipa-getkeytab -p HTTP/fasjson.tinystage.test -k /var/lib/gssproxy/httpd.keytab
+  shell: ipa-getkeytab -p FASJSON/{{ ansible_fqdn }} -k /var/lib/gssproxy/fasjson.keytab
   args:
-    creates: /var/lib/gssproxy/httpd.keytab
+    creates: /var/lib/gssproxy/fasjson.keytab
   notify:
     - restart gssproxy
 
 - name: Set the correct permissions on keytab
   file:
-    path: /var/lib/gssproxy/httpd.keytab
+    path: /var/lib/gssproxy/fasjson.keytab
     owner: root
     group: root
     mode: 0640
@@ -87,7 +81,7 @@
 
 - name: Copy gssproxy conf
   copy:
-    src: config/gssproxy-fasjson.conf
+    src: gssproxy.conf
     dest: /etc/gssproxy/80-fasjson.conf
     mode: 0644
     owner: root
@@ -104,7 +98,7 @@
 
 - name: Configure temporary files
   copy:
-    src: config/tmpfiles-fasjson.conf
+    src: tmpfiles.conf
     dest: /etc/tmpfiles.d/fasjson.conf
 
 - name: Create temporary file
@@ -131,12 +125,9 @@
     mode: 0755
 
 - name: Copy configs for Apache
-  copy: src={{ item.src }} dest={{ item.dest }}
-  with_items:
-    - src: "config/systemd-httpd-service-fasjson.conf"
-      dest: "/etc/systemd/system/httpd.service.d/fasjson.conf"
-    - src: "config/httpd-fasjson.conf"
-      dest: "/etc/httpd/conf.d/fasjson.conf"
+  copy:
+    src: httpd.conf
+    dest: /etc/httpd/conf.d/fasjson.conf
   notify:
     - restart httpd
 

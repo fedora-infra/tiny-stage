@@ -28,12 +28,12 @@ groups = {
 }
 
 ipa = python_freeipa.ClientLegacy(
-    host="ipa.tinystage.test", verify_ssl="/etc/ipa/ca.crt"
+    host="{{ ansible_fqdn }}", verify_ssl="/etc/ipa/ca.crt"
 )
 ipa.login("{{ ipa_admin_user }}", "{{ ipa_admin_password }}")
 
 untouched_ipa = python_freeipa.ClientLegacy(
-    host="ipa.tinystage.test", verify_ssl="/etc/ipa/ca.crt"
+    host="{{ ansible_fqdn }}", verify_ssl="/etc/ipa/ca.crt"
 )
 
 agreement_name = "FPCA"

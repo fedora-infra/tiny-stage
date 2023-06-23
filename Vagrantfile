@@ -6,21 +6,19 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 domain = "tinystage.test"
 
 machines = {
-  "freeipa": {
-    "vm.hostname": "ipa.#{domain}",
-    "hostmanager.aliases": ["kerberos"],
+  "auth": {
+    "hostmanager.aliases": ["ipa", "kerberos", "noggin", "fasjson", "ipsilon", "test-auth"],
     "autostart": true,
+    "libvirt.memory": 2048,
   },
-  "fasjson": {"autostart": true},
-  "ipsilon": {"autostart": true},
-  "noggin": {},
   "elections": {},
   "mirrormanager2": {},
   "ipaclient": {},
   "nonbot":{"operatingsystem": "centos8"},
-  "tinystage": {"autostart": true},
+  "tinystage": {
+    "autostart": true,
+  },
   "fedocal": {},
-  "test-auth": {},
   "src": {},
 }
 
@@ -36,17 +34,17 @@ Vagrant.configure(2) do |config|
     mdef.delete(:operatingsystem)
     config.vm.define mname, autostart: autostart do |machine|
       if operatingsystem == 'centos8'
-        config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.3.2011-20201204.2.x86_64.vagrant-libvirt.box"
-        config.vm.box = "centos83-cloud-libvirt"
+        config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.4.2105-20210603.0.x86_64.vagrant-libvirt.box"
+        config.vm.box = "centos84-cloud-libvirt"
       else
-        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/36/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-36-1.5.x86_64.vagrant-libvirt.box"
-        machine.vm.box = "f36-cloud-libvirt"
+        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-38-1.6.x86_64.vagrant-libvirt.box"
+        machine.vm.box = "f38-cloud-libvirt"
       end
       machine.vm.hostname = "#{mname}.#{domain}"
 
       libvirt_def = {
         "cpus": 2,
-        "memory": 2048,
+        "memory": 1024,
       }
 
       mdef.each do |prop, value|
@@ -86,6 +84,7 @@ Vagrant.configure(2) do |config|
       machine.vm.provision "ansible" do |ansible|
         ansible.playbook = "ansible/#{mname}.yml"
         ansible.config_file = "ansible/ansible.cfg"
+        ansible.verbose = true
       end
 
 
