@@ -16,7 +16,20 @@
       tags: oidc-register
       vars:
         ipsilon_hostname: "{{ ansible_fqdn }}"
-        redirect_path: oidc
+        redirect_path: test-auth/oidc/oidc_callback
         dest: "/home/vagrant/test-auth.client_secrets.json"
     - role: test-auth
       tags: test-auth
+
+  handlers:
+    - name: restart httpd
+      systemd:
+        name: httpd
+        state: restarted
+        daemon_reload: yes
+
+    - name: restart gssproxy
+      systemd:
+        name: gssproxy
+        state: restarted
+        daemon_reload: yes

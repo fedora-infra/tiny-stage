@@ -19,19 +19,13 @@
     owner: vagrant
     group: vagrant
 
-- name: Install the systemd unit files for test-auth
-  copy:
-      src: app.service
-      dest: /etc/systemd/system/test-auth.service
-      mode: 0644
-
 - name: Clone repository
   become_user: vagrant
   git:
     repo: https://github.com/abompard/test-auth.git
     dest: /home/vagrant/test-auth
   notify:
-    - restart test-auth
+    - restart httpd
 
 - name: Install the app
   command:
@@ -39,7 +33,7 @@
     chdir: /home/vagrant/test-auth
     creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/fedora_test_auth-0.0.1-py{{ ansible_local["python"]["py3"]["version"] }}.egg
   notify:
-    - restart test-auth
+    - restart httpd
 
 - name: Copy the config file
   copy:
@@ -49,7 +43,12 @@
     owner: vagrant
     group: vagrant
   notify:
-    - restart test-auth
+    - restart httpd
+
+- name: Allow httpd to access vagrant's home dir
+  file:
+    path: /home/vagrant
+    mode: 0755
 
 - name: Allow apache to see /srv
   sefcontext:
@@ -73,6 +72,8 @@
     persistent: yes
   with_items:
     - httpd_use_fusefs
+    - httpd_can_network_connect
+    - httpd_read_user_content
   notify:
     - restart httpd
 

@@ -1,5 +1,0 @@
-- name: restart test-auth
-  systemd:
-    name: test-auth
-    state: restarted
-    daemon_reload: yes

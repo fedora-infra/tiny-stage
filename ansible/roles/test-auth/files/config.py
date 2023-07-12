@@ -1,5 +1,6 @@
+APPLICATION_ROOT = "/test-auth/"
 SECRET_KEY = "ohsosecret"
-OIDC_CLIENT_SECRETS = "/home/vagrant/client_secrets.json"
+OIDC_CLIENT_SECRETS = "/home/vagrant/test-auth.client_secrets.json"
 OIDC_SCOPES = [
     "openid",
     "email",
