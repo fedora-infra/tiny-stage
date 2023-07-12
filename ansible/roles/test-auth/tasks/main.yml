@@ -19,6 +19,12 @@
     owner: vagrant
     group: vagrant
 
+- name: Install the systemd unit files for test-auth
+  copy:
+      src: app.service
+      dest: /etc/systemd/system/test-auth.service
+      mode: 0644
+
 - name: Clone repository
   become_user: vagrant
   git:
