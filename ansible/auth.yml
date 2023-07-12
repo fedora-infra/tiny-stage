@@ -4,13 +4,19 @@
   become_method: sudo
   roles:
     - common
-    - freeipa
-    - ipsilon
-    - noggin
-    - fasjson
+    - role: freeipa
+      tags: ipa
+    - role: ipsilon
+      tags: ipsilon
+    - role: noggin
+      tags: noggin
+    - role: fasjson
+      tags: fasjson
     - role: oidc-register
+      tags: oidc-register
       vars:
         ipsilon_hostname: "{{ ansible_fqdn }}"
         redirect_path: oidc
         dest: "/home/vagrant/test-auth.client_secrets.json"
-    - test-auth
+    - role: test-auth
+      tags: test-auth
