@@ -37,7 +37,7 @@
     chdir: /home/vagrant/freeipa-fas/
     creates: /usr/share/ipa/schema.d/89-fasschema.ldif
 
-- name: kinit
+- name: kinit for IPA
   shell: echo "{{ ipa_admin_password }}" | kinit admin@{{ krb_realm }}
 
 - name: Remove the admin account's expiration date

@@ -41,7 +41,7 @@
 #  args:
 #    chdir: /vagrant/
 
-- name: kinit
+- name: kinit for nonbot
   shell: echo "{{ipa_admin_password}}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 - name: Delete any old service in IPA

@@ -41,7 +41,7 @@
     chdir: /opt/ipsilon-fedora
     creates: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
 
-- name: kinit
+- name: kinit for Ipsilon
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 
@@ -49,7 +49,7 @@
   shell: ipa service-add IPSILON/{{ ansible_fqdn }} --force
   register: result
   changed_when: '"Added service" in result.stdout'
-  failed_when: '" already exists" not in result.stderr or result.rc != 1'
+  failed_when: '" already exists" not in result.stderr and result.rc != 0'
 
 - name: Get service keytab for HTTPd
   shell: ipa-getkeytab -p IPSILON/{{ ansible_fqdn }} -k /var/lib/gssproxy/ipsilon.keytab

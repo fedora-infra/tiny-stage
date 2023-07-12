@@ -57,7 +57,7 @@
     dest: /srv/setup-fasjson-service.sh
     mode: 0755
 
-- name: kinit
+- name: kinit for FASJSON
   shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
 - name: Create the service in IPA
