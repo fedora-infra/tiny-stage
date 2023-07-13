@@ -40,6 +40,11 @@
     owner: root
     group: root
 
+- name: Install fasjson.cfg
+  template:
+    src: fasjson.cfg
+    dest: /etc/fasjson.cfg
+
 - name: Copy wsgi
   copy:
     src: fasjson.wsgi
