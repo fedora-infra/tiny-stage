@@ -61,6 +61,12 @@
   args:
     creates: /var/lib/ipa/backup/backup-clean
 
+- name: copy the CA cert to the vagrant dir
+  copy:
+    remote_src: true
+    src: /etc/ipa/ca.crt
+    dest: /vagrant/ca.crt
+
 - name: Install the bashrc
   template:
       src: bashrc
