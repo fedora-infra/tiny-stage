@@ -1,0 +1,38 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - httpd
+      - krb5-workstation
+      - sqlite
+      - openssl
+      - mod_ssl
+    state: present
+
+- name: kinit for Apache
+  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+
+- name: Get the certificates
+  import_role:
+    name: cert
+  vars:
+    cert_hostname: "{{ ansible_fqdn }}"
+    cert_basename: server
+
+- name: configure SSLCertificateFile in ssl.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/ssl.conf
+    regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
+    line: SSLCertificateFile /etc/pki/tls/certs/server.pem
+
+- name: configure SSLCertificateKeyFile in ssl.conf
+  lineinfile:
+    path: /etc/httpd/conf.d/ssl.conf
+    regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
+    line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
+
+- name: set default client keytab in krb5.conf
+  lineinfile:
+    path: /etc/krb5.conf
+    insertafter: 'default_ccache_name.*'
+    line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'

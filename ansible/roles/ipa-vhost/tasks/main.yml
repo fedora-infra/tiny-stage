@@ -1,0 +1,43 @@
+---
+- name: Create the virtual host in IPA
+  shell: ipa host-add {{ vhost }} --force
+  register: result
+  changed_when: '"Added host" in result.stdout'
+  failed_when: '" already exists" not in result.stderr and result.rc != 0'
+
+- name: Allow the host to manage the virtual host
+  shell: ipa host-add-managedby --hosts={{ ansible_fqdn }} {{ vhost }}
+  register: result
+  changed_when: '"Number of members added 1" in result.stdout'
+  failed_when: '(ansible_fqdn + ": This entry is already a member") not in result.stdout and result.rc != 0'
+
+- name: Create the service in IPA
+  shell: ipa service-add HTTP/{{ vhost }} --force
+  register: result
+  changed_when: '"Added service" in result.stdout'
+  failed_when: '" already exists" not in result.stderr and result.rc != 0'
+
+- name: Allow the host to manage the service
+  shell: ipa service-add-host --hosts={{ ansible_fqdn }} HTTP/{{ vhost }}
+  register: result
+  changed_when: '"Number of members added 1" in result.stdout'
+  failed_when: '(ansible_fqdn + ": This entry is already a member") not in result.stdout and result.rc != 0'
+
+- name: Get service keytab for Apache
+  shell: ipa-getkeytab -p HTTP/{{ vhost }} -k /etc/httpd/conf/{{ app_name }}.keytab
+  args:
+    creates: /etc/httpd/conf/{{ app_name }}.keytab
+
+- name: Set the correct permissions on keytab
+  file:
+    path: /etc/httpd/conf/{{ app_name }}.keytab
+    owner: apache
+    group: apache
+    mode: 0640
+
+- name: Create the SSL certificate
+  import_role:
+    name: cert
+  vars:
+    cert_hostname: "{{ vhost }}"
+    cert_basename: "{{ app_name }}"

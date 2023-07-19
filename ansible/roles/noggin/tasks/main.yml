@@ -4,7 +4,6 @@
       name:
       - httpd
       - python3-mod_wsgi
-      - freeipa-server
       - fedora-messaging
       - gcc
       - git

@@ -41,52 +41,10 @@
     chdir: /opt/ipsilon-fedora
     creates: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
 
-- name: kinit for Ipsilon
-  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
-
-
-- name: Create the ipsilon service in IPA
-  shell: ipa service-add IPSILON/{{ ansible_fqdn }} --force
-  register: result
-  changed_when: '"Added service" in result.stdout'
-  failed_when: '" already exists" not in result.stderr and result.rc != 0'
-
-- name: Get service keytab for HTTPd
-  shell: ipa-getkeytab -p IPSILON/{{ ansible_fqdn }} -k /var/lib/gssproxy/ipsilon.keytab
-  args:
-    creates: /var/lib/gssproxy/ipsilon.keytab
-  notify:
-    - restart gssproxy
-
-- name: Set the correct permissions on keytab
-  file:
-    path: /var/lib/gssproxy/ipsilon.keytab
-    owner: root
-    group: root
-    mode: 0640
-  notify:
-    - restart gssproxy
-
-- name: Copy gssproxy conf
-  copy:
-    src: gssproxy.conf
-    dest: /etc/gssproxy/80-ipsilon.conf
-    mode: 0644
-    owner: root
-    group: root
-  notify:
-    - restart gssproxy
-
-- name: Enable and restart GSSProxy
-  systemd:
-    state: started
-    name: gssproxy
-    enabled: yes
-    daemon_reload: yes
-
 - name: install ipsilon
   command:
     cmd:  ipsilon-server-install
+          --ipa=yes
           --secure no
           --server-debugging
           --admin-user={{ ipa_admin_user }}
@@ -94,11 +52,10 @@
           --openid=yes
           --saml2=yes
           --gssapi=yes
-          --gssapi-httpd-keytab=/var/lib/gssproxy/ipsilon.keytab
+          --gssapi-httpd-keytab=/etc/httpd/conf/ipsilon.keytab
           --pam=yes
           --info-sssd=yes
     creates: /etc/ipsilon/idp/ipsilon.conf
-          # --ipa=yes
 
 - name: overwrite ipsilon configuration
   copy:
@@ -107,6 +64,15 @@
     owner: ipsilon
     group: ipsilon
     mode: 0600
+
+- name: kinit for Ipsilon
+  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+
+- name: Create the vhost in IPA
+  import_role:
+    name: ipa-vhost
+  vars:
+    app_name: ipsilon
 
 # the configuration.conf template uses this to populate
 # the openidc keyid
@@ -123,30 +89,6 @@
     group: ipsilon
     mode: 0600
 
-# - name: configure SSLCertificateFile in ssl.conf
-#   lineinfile:
-#     path: /etc/httpd/conf.d/ssl.conf
-#     regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
-#     line: SSLCertificateFile /etc/pki/tls/certs/server.pem
-# 
-# - name: configure SSLCertificateKeyFile in ssl.conf
-#   lineinfile:
-#     path: /etc/httpd/conf.d/ssl.conf
-#     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
-#     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
-
-# - name: fix the permissions of the keytab file
-#   file:
-#     name: /etc/httpd/conf/http.keytab
-#     owner: ipsilon
-#     group: apache
-# 
-# - name: set default client keytab in krb5.conf
-#   lineinfile:
-#     path: /etc/krb5.conf
-#     insertafter: 'default_ccache_name.*'
-#     line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
-
 - name: Tune SELinux Policy
   seboolean:
     name: "{{ item }}"
@@ -157,23 +99,12 @@
     - httpd_can_network_connect
     - httpd_use_fusefs
 
-- name: Remove default static alias from httpd conf
-  replace:
-    path: /etc/ipsilon/idp/idp.conf
-    regexp: '^\s*Alias \/idp\/ui \/usr\/share\/ipsilon\/ui'
-    replace: '#Alias /idp/ui /usr/share/ipsilon/ui'
-
-- name: Add static alias for Fedora theme in httpd conf
-  lineinfile:
-    path: /etc/ipsilon/idp/idp.conf
-    insertbefore: BOF
-    line: Alias /idp/ui /usr/share/ipsilon/themes/Fedora
-
-- name: Add static alias for Fedora theme in httpd conf
-  lineinfile:
-    path: /etc/ipsilon/idp/idp.conf
-    insertbefore: BOF
-    line: Alias /ui /usr/share/ipsilon/themes/Fedora
+- name: Copy the Apache config
+  template:
+    src: httpd.conf
+    dest: /etc/ipsilon/idp/idp.conf
+  notify:
+    - restart httpd
 
 - name: Set ipsilon theme to fedora
   lineinfile:
@@ -185,21 +116,6 @@
   copy:
     src: cors.conf
     dest: /etc/httpd/conf.d/cors.conf
-
-
-# # we were hitting a condition where the key and cert were not there
-# # yet before trying to restart apache. So we check they are here before
-# # proceeding.
-# 
-# - name: Check the cert is there
-#   wait_for:
-#     path: /etc/pki/tls/certs/server.pem
-#     state: present
-# 
-# - name: Check the key is there
-#   wait_for:
-#     path: /etc/pki/tls/private/server.key
-#     state: present
 
 - name: Allow apache to access the public directory
   file:

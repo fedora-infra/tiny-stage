@@ -4,18 +4,17 @@
   become_method: sudo
   roles:
     - common
-    - role: freeipa
-      tags: ipa
+    - ipa-client
+    - apache
     - role: ipsilon
       tags: ipsilon
-    - role: noggin
-      tags: noggin
     - role: fasjson
       tags: fasjson
+    - role: noggin
+      tags: noggin
     - role: oidc-register
       tags: oidc-register
       vars:
-        ipsilon_hostname: "{{ ansible_fqdn }}"
         redirect_path: test-auth/oidc/oidc_callback
         dest: "/home/vagrant/test-auth.client_secrets.json"
     - role: test-auth
@@ -25,11 +24,5 @@
     - name: restart httpd
       systemd:
         name: httpd
-        state: restarted
-        daemon_reload: yes
-
-    - name: restart gssproxy
-      systemd:
-        name: gssproxy
         state: restarted
         daemon_reload: yes

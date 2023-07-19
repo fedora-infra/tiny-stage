@@ -6,9 +6,9 @@ Testing and developing Fedora Infra applications can be  tedious without having 
 As a minimum, tiny-stage creates the following machines, and configures them to talk to each other:
 
 * The `auth` VM, including:
-  * FreeIPA, with the FreeIPA FAS extensions installed: https://auth.tinystage.test/
-  * FASJSON (the Fedora Accounts API): http://auth.tinystage.test/fasjson/
-  * Ipsilon: https://auth.tinystage.test/idp
+  * FreeIPA, with the FreeIPA FAS extensions installed: https://ipa.tinystage.test/
+  * FASJSON (the Fedora Accounts API): http://fasjson.tinystage.test/fasjson/
+  * Ipsilon: https://ipsilon.tinystage.test/idp
   * Noggin: https://auth.tinystage.test/noggin
   * Test-Auth: https://auth.tinystage.test/test-auth
 * The `tinystage` VM, including:
@@ -34,7 +34,7 @@ $ sudo systemctl enable libvirtd
 $ sudo systemctl start libvirtd
 ```
 
-Then run vagrant to create the 4 default machines (freeipa, fasjson, ipsilon, fedora-messages):
+Then run vagrant to create the 3 default machines (ipa, auth, tinystage):
 
 ```
 $ vagrant up
@@ -59,6 +59,7 @@ To check what machines are currently running, use the command:
 $ vagrant status
 Current machine states:
 
+ipa                       running (libvirt)
 auth                      running (libvirt)
 elections                 running (libvirt)
 mirrormanager2            not created (libvirt)

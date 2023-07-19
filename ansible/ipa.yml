@@ -1,7 +1,8 @@
 ---
-- hosts: freeipa
+- hosts: ipa
   become: true
   become_method: sudo
   roles:
     - common
-    - freeipa
+    - role: freeipa
+      tags: ipa

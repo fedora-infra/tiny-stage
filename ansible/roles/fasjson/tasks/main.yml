@@ -50,51 +50,50 @@
   notify:
     - restart httpd
 
-
-- name: Copy the service setup script
-  template:
-    src: setup-fasjson-service.sh
-    dest: /srv/setup-fasjson-service.sh
-    mode: 0755
-
 - name: kinit for FASJSON
   shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
-- name: Create the service in IPA
-  command: bash /srv/setup-fasjson-service.sh FASJSON/{{ ansible_fqdn }}
+- name: Create the vhost in IPA
+  import_role:
+    name: ipa-vhost
+  vars:
+    app_name: fasjson
 
-- name: Get service keytab for HTTPd
-  shell: ipa-getkeytab -p FASJSON/{{ ansible_fqdn }} -k /var/lib/gssproxy/fasjson.keytab
-  args:
-    creates: /var/lib/gssproxy/fasjson.keytab
-  notify:
-    - restart gssproxy
+- name: Create the fasjson service delegation rule
+  shell: ipa servicedelegationrule-add fasjson-delegation
+  register: result
+  changed_when: '"Added servicedelegationrule" in result.stdout'
+  failed_when: '" already exists" not in result.stderr and result.rc != 0'
 
-- name: Set the correct permissions on keytab
-  file:
-    path: /var/lib/gssproxy/fasjson.keytab
-    owner: root
-    group: root
-    mode: 0640
-  notify:
-    - restart gssproxy
+- name: Add fasjson to the service delegation rule
+  shell: ipa servicedelegationrule-add-member --principals HTTP/{{ vhost }} fasjson-delegation
+  register: result
+  changed_when: '"Member added to servicedelegationrule" in result.stdout'
+  failed_when: '"HTTP/"+vhost+": This entry is already a member" not in result.stdout and result.rc != 0'
 
-- name: Copy gssproxy conf
-  copy:
-    src: gssproxy.conf
-    dest: /etc/gssproxy/80-fasjson.conf
-    mode: 0644
-    owner: root
-    group: root
-  notify:
-    - restart gssproxy
+- name: Add the LDAP delegation target to the service delegation rule
+  shell: ipa servicedelegationrule-add-target --servicedelegationtargets=ipa-ldap-delegation-targets fasjson-delegation
+  register: result
+  changed_when: '"Number of targets added 1" in result.stdout'
+  failed_when: '"ipa-ldap-delegation-targets: This entry is already a member" not in result.stdout and result.rc != 0'
 
-- name: Enable and restart GSSProxy
-  systemd:
-    state: started
-    name: gssproxy
-    enabled: yes
-    daemon_reload: yes
+- name: Create the HTTP delegation target
+  shell: ipa servicedelegationtarget-add ipa-http-delegation-targets
+  register: result
+  changed_when: '"Added servicedelegationtarget" in result.stdout'
+  failed_when: '" already exists" not in result.stderr and result.rc != 0'
+
+- name: Add IPA to the HTTP delegation target
+  shell: ipa servicedelegationtarget-add-member ipa-http-delegation-targets --principals=HTTP/ipa.tinystage.test@{{ krb_realm }}
+  register: result
+  changed_when: '"Member added to servicedelegationtarget" in result.stdout'
+  failed_when: '"HTTP/ipa.tinystage.test@"+krb_realm+": This entry is already a member" not in result.stdout and result.rc != 0'
+
+- name: Add the HTTP delegation target to the delegation rule
+  shell: ipa servicedelegationrule-add-target --servicedelegationtargets=ipa-http-delegation-targets fasjson-delegation
+  register: result
+  changed_when: '"Number of targets added 1" in result.stdout'
+  failed_when: '"ipa-http-delegation-targets: This entry is already a member" not in result.stdout and result.rc != 0'
 
 - name: Configure temporary files
   copy:
@@ -118,18 +117,24 @@
   notify:
     - restart httpd
 
-- name: Create Apache service
+- name: Create Apache service config directory
   file:
     path: /etc/systemd/system/httpd.service.d
     state: directory
     mode: 0755
 
-- name: Copy configs for Apache
-  copy:
+- name: Copy the Apache config
+  template:
     src: httpd.conf
     dest: /etc/httpd/conf.d/fasjson.conf
   notify:
     - restart httpd
+
+- name: Allow apache to modify files in /run/fasjson
+  community.general.sefcontext:
+    target: '/var/run/fasjson(/.*)?'
+    setype: httpd_var_run_t
+    state: present
 
 - name: Enable and restart Apache
   systemd:

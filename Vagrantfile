@@ -6,10 +6,15 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 domain = "tinystage.test"
 
 machines = {
-  "auth": {
-    "hostmanager.aliases": ["ipa", "kerberos", "noggin", "fasjson", "ipsilon", "test-auth"],
+  "ipa": {
+    "hostmanager.aliases": ["kerberos"],
     "autostart": true,
     "libvirt.memory": 2048,
+  },
+  "auth": {
+    "hostmanager.aliases": ["fasjson", "ipsilon"],
+    "autostart": true,
+    "libvirt.memory": 1536,
   },
   "elections": {},
   "mirrormanager2": {},
