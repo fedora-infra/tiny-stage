@@ -82,6 +82,13 @@ To gain shell access to any of the running machines, use the vagrant ssh command
 vagrant ssh elections
 ```
 
+Kerberos-authenticated requests can be made using the provided `krb5.conf` file:
+
+```
+$ echo password | KRB5_CONFIG=krb5.conf kinit admin
+$ KRB5_CONFIG=krb5.conf curl --cacert ./synced_folders/ipa/ca.crt -u : --negotiate https://fasjson.tinystage.test/fasjson/v1/me/
+```
+
 ## Users and Passwords
 
 Tiny Stage populates the IPA database with many users, and for ease of use, they all have `password` as the password.
