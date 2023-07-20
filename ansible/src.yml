@@ -6,4 +6,5 @@
   roles:
     - common
     - ipa-client
+    - cert
     - pagure
