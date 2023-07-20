@@ -110,5 +110,7 @@
 
 - name: create data
   command: python dev-data.py
+  environment:
+    REQUESTS_CA_BUNDLE: /etc/pki/tls/certs/ca-bundle.crt
   args:
     chdir: /home/vagrant/pagure/
