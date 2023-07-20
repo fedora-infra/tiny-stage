@@ -24,15 +24,23 @@
     path: /etc/httpd/conf.d/ssl.conf
     regexp: "SSLCertificateFile \/etc\/pki\/tls\/certs\/localhost.crt"
     line: SSLCertificateFile /etc/pki/tls/certs/server.pem
+  notify: restart httpd
 
 - name: configure SSLCertificateKeyFile in ssl.conf
   lineinfile:
     path: /etc/httpd/conf.d/ssl.conf
     regexp: "SSLCertificateKeyFile \/etc\/pki\/tls\/private\/localhost.key"
     line: SSLCertificateKeyFile /etc/pki/tls/private/server.key
+  notify: restart httpd
 
 - name: set default client keytab in krb5.conf
   lineinfile:
     path: /etc/krb5.conf
     insertafter: 'default_ccache_name.*'
     line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
+
+- name: redirect to https
+  copy:
+    src: redirect-to-ssl.conf
+    dest: /etc/httpd/conf.d/redirect-to-ssl.conf
+  notify: restart httpd
