@@ -25,6 +25,9 @@ machines = {
   },
   "fedocal": {},
   "src": {},
+  "pagure": {
+        "libvirt.memory": 2048,
+  },
 }
 
 Vagrant.configure(2) do |config|
