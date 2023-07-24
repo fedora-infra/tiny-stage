@@ -1,0 +1,14 @@
+[Unit]
+Description=Pagure WebHook server (Allowing web-hook notifications)
+After=redis.target
+Documentation=https://pagure.io/pagure
+
+[Service]
+Environment="PAGURE_CONFIG=/etc/pagure/pagure.cfg"
+ExecStart=celery -A pagure.lib.tasks worker --loglevel=INFO -Q pagure_webhook
+Type=simple
+User=git
+Group=git
+
+[Install]
+WantedBy=multi-user.target

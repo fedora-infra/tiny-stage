@@ -1,0 +1,12 @@
+[Unit]
+Description=The Pagure web service
+After=network.target
+
+[Service]
+Environment="PAGURE_CONFIG=/etc/pagure/pagure.cfg"
+ExecStart=python3 /srv/pagure/runserver.py --host 0.0.0.0 --debug --port 443
+Type=simple
+User=root
+
+[Install]
+WantedBy=multi-user.target
