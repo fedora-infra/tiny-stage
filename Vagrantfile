@@ -26,6 +26,7 @@ machines = {
   "fedocal": {},
   "src": {},
   "pagure": {
+        "synced_folder": "/srv/pagure/",
         "libvirt.memory": 2048,
   },
 }
@@ -40,6 +41,8 @@ Vagrant.configure(2) do |config|
     mdef.delete(:autostart)
     operatingsystem = mdef.fetch(:operatingsystem, "fedora")
     mdef.delete(:operatingsystem)
+    synced_folder = mdef.fetch(:synced_folder, "/vagrant")
+    mdef.delete(:synced_folder)
     config.vm.define mname, autostart: autostart do |machine|
       if operatingsystem == 'centos8'
         config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.4.2105-20210603.0.x86_64.vagrant-libvirt.box"
@@ -80,8 +83,7 @@ Vagrant.configure(2) do |config|
       end
 
       machine.vm.synced_folder ".", "/vagrant", disabled: true
-      machine.vm.synced_folder "synced_folders/#{mname}", "/vagrant", type: "sshfs", create: true
-
+      machine.vm.synced_folder "synced_folders/#{mname}", synced_folder, type: "sshfs", create: true
 
       machine.vm.provider :libvirt do |libvirt|
         libvirt_def.each do |prop, value|
