@@ -3,10 +3,12 @@ Description=The Pagure web service
 After=network.target
 
 [Service]
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 Environment="PAGURE_CONFIG=/etc/pagure/pagure.cfg"
 ExecStart=python3 /srv/pagure/runserver.py --host 0.0.0.0 --debug --port 443
 Type=simple
-User=root
+User=git
+Group=git
 
 [Install]
 WantedBy=multi-user.target

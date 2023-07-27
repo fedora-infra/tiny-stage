@@ -70,7 +70,7 @@
   lineinfile:
     path: /srv/pagure/runserver.py
     search_string: "APP.run(host=args.host, port=int(args.port))"
-    line: "APP.run(host=args.host, port=int(args.port),ssl_context=(\"/etc/pki/tls/certs/server.pem\",\"/etc/pki/tls/private/server.key\"))"
+    line: "APP.run(host=args.host, port=int(args.port),ssl_context=(\"/etc/pagure/server.pem\",\"/etc/pagure/server.key\"))"
 
 - name: Create the folder where we'll place the symbolic link for pagure
   file:
@@ -162,6 +162,33 @@
 
 
 # Configure the web app
+
+- name: Add a copy of client_secrets to where pagure can use it
+  copy:
+    src: /home/vagrant/client_secrets.json
+    dest: /etc/pagure/client_secrets.json
+    owner: git
+    group: git
+    mode: 0644
+    remote_src: True
+
+- name: Add a copy of server.pem to where pagure can use it
+  copy:
+    src: /etc/pki/tls/certs/server.pem
+    dest: /etc/pagure/server.pem
+    owner: git
+    group: git
+    mode: 0644
+    remote_src: True
+
+- name: Add a copy of server.key to where pagure can use it
+  copy:
+    src: /etc/pki/tls/private/server.key
+    dest: /etc/pagure/server.key
+    owner: git
+    group: git
+    mode: 0644
+    remote_src: True
 
 - name: Install the pagure configuration
   copy:
