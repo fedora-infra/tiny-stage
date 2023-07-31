@@ -66,12 +66,6 @@
     dest: /srv/pagure
     force: true
 
-- name: patch runserver
-  lineinfile:
-    path: /srv/pagure/runserver.py
-    search_string: "APP.run(host=args.host, port=int(args.port))"
-    line: "APP.run(host=args.host, port=int(args.port),ssl_context=(\"/etc/pagure/server.pem\",\"/etc/pagure/server.key\"))"
-
 - name: Create the folder where we'll place the symbolic link for pagure
   file:
     path: /usr/lib/python3.11/site-packages/
