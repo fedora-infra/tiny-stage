@@ -29,7 +29,7 @@ There are also many additional machines for development and testing purposes tha
 tiny-stage uses Vagrant to create and manage machines. Prepare your machine to run tiny-stage with the commands:
 
 ```
-$ sudo dnf install ansible ansible-freeipa libvirt vagrant-libvirt vagrant-sshfs vagrant-hostmanager
+$ sudo dnf install ansible ansible-freeipa libvirt vagrant-libvirt vagrant-sshfs vagrant-hostmanager python3-jmespath
 $ sudo systemctl enable libvirtd
 $ sudo systemctl start libvirtd
 ```

@@ -138,7 +138,7 @@
 
 - name: Enable and restart Apache
   systemd:
-    state: started
+    state: restarted
     name: httpd
     enabled: yes
     daemon_reload: yes
