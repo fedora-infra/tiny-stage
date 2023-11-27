@@ -1,0 +1,60 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - fedora-messaging
+      - gcc
+      - git
+      - poetry
+      - python3-devel
+      - python3-pip
+      - vim
+      - krb5-devel
+      - libpq-devel
+      - tox
+      - python-psycopg2
+    state: present
+
+- name: Install the .bashrc
+  copy:
+    src: .bashrc
+    dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Install the motd
+  copy:
+    src: motd
+    dest: /etc/motd
+    mode: 0644
+
+- name: get datanommer
+  git:
+    repo: https://github.com/fedora-infra/datagrepper.git
+    dest: /home/vagrant/datagrepper
+
+- name: Install datagrepper with poetry
+  shell: poetry install --extras schemas
+  args:
+    chdir: /home/vagrant/datagrepper/
+  become: yes
+  become_user: vagrant
+
+- name: Use the stage fedora-messaging queue to consume
+  template:
+    src: fedora-messaging.toml.j2
+    dest: /etc/fedora-messaging/config.toml
+
+- name: Install the systemd unit files for datagrepper
+  copy:
+    src: "datagrepper.service"
+    dest: /etc/systemd/system/datagrepper.service
+    mode: 0644
+
+- name: Start datagrepper service using systemd
+  systemd:
+    state: started
+    name: datagrepper
+    daemon_reload: yes
+    enabled: yes

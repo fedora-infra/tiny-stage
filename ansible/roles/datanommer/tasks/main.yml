@@ -1,0 +1,127 @@
+---
+- name: Install RPM packages
+  dnf:
+    name:
+      - fedora-messaging
+      - gcc
+      - git
+      - poetry
+      - python3-devel
+      - python3-pip
+      - vim
+      - krb5-devel
+      - libpq-devel
+      - tox
+      - python-psycopg2
+      - postgresql-server
+      - timescaledb
+      - acl
+    state: present
+
+
+# database
+
+- name: Setup the postgresql DB
+  command: postgresql-setup --initdb
+  args:
+    creates: /var/lib/pgsql/data/postgresql.conf
+
+- name: Add timescaledb to postgresql config
+  lineinfile:
+    path: /var/lib/pgsql/data/postgresql.conf
+    regexp: ^shared_preload_libraries =
+    line: "shared_preload_libraries = 'timescaledb'"
+
+- name: Configure access to postgresql
+  postgresql_pg_hba:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    contype: host
+    databases: all
+    users: all
+    address: "{{item}}"
+    method: md5
+  loop:
+    - 127.0.0.1/32
+    - ::1/128
+
+- name: Start postgresql
+  service:
+    name: postgresql
+    enabled: yes
+    state: started
+
+- block:
+    - name: Create the user
+      postgresql_user:
+        name: datanommer
+        password: datanommer
+
+    - name: Create the database
+      postgresql_db:
+        name: messages
+        owner: datanommer
+
+    - name: Activate timescaledb
+      postgresql_ext:
+        name: timescaledb
+        db: messages
+  become: yes
+  become_user: postgres
+  become_method: sudo
+
+- name: Make connection easier
+  copy:
+    dest: /home/vagrant/.pgpass
+    content: "*:*:messages:datanommer:datanommer\n"
+    owner: vagrant
+    group: vagrant
+    mode: 0600
+
+# datanommer
+
+- name: get datanommer
+  git:
+    repo: https://github.com/fedora-infra/datanommer.git
+    dest: /home/vagrant/datanommer
+
+
+- name: Install datanommer with poetry
+  shell: poetry install
+  args:
+    chdir: /home/vagrant/datanommer/datanommer.{{item}}/
+  loop:
+    - models
+    - commands
+    - consumer
+  become: yes
+  become_user: vagrant
+
+- name: Use the stage fedora-messaging queue to consume
+  template:
+    src: fedora-messaging.toml.j2
+    dest: /etc/fedora-messaging/datanommer.toml
+
+- name: Install Datanommer's alembic config file
+  copy:
+    src: alembic.ini
+    dest: /etc/datanommer.alembic.ini
+
+- name: Create datanommer db
+  shell: poetry run datanommer-create-db -c /etc/fedora-messaging/datanommer.toml
+  args:
+    chdir: /home/vagrant/datanommer/datanommer.commands
+  become: yes
+  become_user: vagrant
+
+- name: Install the systemd unit files for datanommer consumer
+  copy:
+    src: "datanommer.service"
+    dest: /etc/systemd/system/datanommer.service
+    mode: 0644
+
+- name: Start datanommer service using systemd
+  systemd:
+    state: started
+    name: datanommer
+    daemon_reload: yes
+    enabled: yes

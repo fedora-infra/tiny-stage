@@ -25,6 +25,7 @@ machines = {
   },
   "fedocal": {},
   "src": {},
+  "datagrepper": {},
   "pagure": {
         "synced_folder": "/srv/pagure/",
         "libvirt.memory": 2048,

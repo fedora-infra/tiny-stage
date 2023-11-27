@@ -1,0 +1,12 @@
+[Unit]
+Description=datanommer
+
+[Service]
+User=vagrant
+Restart=on-failure
+RestartSec=5s
+WorkingDirectory=/home/vagrant/datanommer/datanommer.consumer
+ExecStart=/bin/sh -c 'poetry run fedora-messaging --conf /etc/fedora-messaging/datanommer.toml consume --callback datanommer.consumer:Nommer'
+
+[Install]
+WantedBy=multi-user.target
