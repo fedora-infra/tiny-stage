@@ -1,0 +1,8 @@
+[allowlist]
+regexTarget = "match"
+# since tinystage is just a local test / development setup, we use
+# passwords like this.
+regexes = [
+  "amqp://fedoramessages:fedoramessages@tinystage.tinystage.test",
+  "postgresql://datanommer:datanommer@localhost/messages",
+]
