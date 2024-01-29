@@ -5,12 +5,6 @@ if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-echo "Reminder of the commands:
- * pstart: to start all the services
- * pstop:  to stop all the services
- * prestart: to restart all the services
- * plog:   to access the logs of the 'pagure' service (the web server)"
-
 # Uncomment the following line if you don't like systemctl's auto-paging feature:
 # export SYSTEMD_PAGER=
 
