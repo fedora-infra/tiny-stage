@@ -29,12 +29,12 @@
 - name: get freeipa-fas
   git:
     repo: https://github.com/fedora-infra/freeipa-fas.git
-    dest: /home/vagrant/freeipa-fas
+    dest: /vagrant/freeipa-fas
 
 - name: install freeipa-fas
   command: ./install.sh
   args:
-    chdir: /home/vagrant/freeipa-fas/
+    chdir: /vagrant/freeipa-fas/
     creates: /usr/share/ipa/schema.d/89-fasschema.ldif
 
 - name: kinit for IPA
