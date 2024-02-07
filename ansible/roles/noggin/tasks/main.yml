@@ -31,10 +31,36 @@
     target: "/srv(/.*)?"
     setype: httpd_sys_content_t
 
-- name: Install Noggin with Pip
-  pip:
-    name:
-      - noggin-aaa
+# - name: Install Noggin with Pip
+#   pip:
+#     name:
+#       - noggin-aaa
+
+- name: get noggin
+  git:
+    repo: https://github.com/fedora-infra/noggin.git
+    dest: /vagrant/noggin
+  become: True
+  become_user: vagrant
+
+- name: install noggin with poetry
+  shell: poetry install
+  become: True
+  become_user: vagrant
+  args:
+    chdir: /vagrant/noggin
+
+- name: stuff noggin virtualenv into a variable
+  shell: 
+    cmd: poetry env info -p
+  become: True
+  become_user: vagrant
+  register: poetry_virtualenv_path
+  args:
+    chdir: /vagrant/noggin
+
+- name: Turn off SELinux
+  command: setenforce 0
 
 - name: Install the bashrc
   copy:
@@ -59,10 +85,10 @@
   notify:
     - restart httpd
 
-- name: compile the translations
-  command:
-    cmd: pybabel compile -d /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations
-    creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
+# - name: compile the translations
+#   command:
+#     cmd: pybabel compile -d /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations
+#     creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
 
 - name: Tune SELinux Policy
   seboolean:
@@ -76,7 +102,7 @@
     - restart httpd
 
 - name: Copy configs for Apache
-  copy:
+  template:
     src: httpd.conf
     dest: /etc/httpd/conf.d/noggin.conf
   notify:
