@@ -18,7 +18,7 @@
 # https://kojipkgs.fedoraproject.org//work/tasks/6262/68326262/python3-sgmllib3k-1.0.0-2.el8.noarch.rpm
 - name: Install RPM packages
   dnf:
-      name: ['limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'supybot-meetbot', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc', 'gssproxy', 'ipa-client']
+      name: ['limnoria', 'supybot-fedora', 'python3-sgmllib3k', 'supybot-koji', 'supybot-meetbot', 'supybot-notify', 'ngircd', 'weechat', 'git', 'vim', 'krb5-workstation', 'krb5-devel', 'gcc']
       disable_gpg_check: yes
       state: present
 
@@ -43,40 +43,6 @@
 
 - name: kinit for nonbot
   shell: echo "{{ipa_admin_password}}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
-
-- name: Delete any old service in IPA
-  command: ipa service-del NONBOT/nonbot.tinystage.test
-  ignore_errors: yes
-
-- name: Create the service in IPA
-  command: ipa service-add NONBOT/nonbot.tinystage.test
-
-- name: Get service keytab for NONBOT
-  shell: ipa-getkeytab -p NONBOT/nonbot.tinystage.test@{{ krb_realm }} -k /var/lib/gssproxy/nonbot.keytab
-  args:
-    creates: /var/lib/gssproxy/nonbot.keytab
-
-- name: Set the correct permissions on keytab
-  file:
-    path: /var/lib/gssproxy/nonbot.keytab
-    owner: root
-    group: root
-    mode: 0640
-
-- name: Copy gssproxy conf
-  copy:
-    src: gssproxy-nonbot.conf
-    dest: /etc/gssproxy/98-nonbot.conf
-    mode: 0644
-    owner: root
-    group: root
-
-- name: Enable and restart GSSProxy
-  systemd:
-    state: restarted
-    name: gssproxy
-    enabled: yes
-    daemon_reload: yes
 
 - name: copy supybot config
   copy:

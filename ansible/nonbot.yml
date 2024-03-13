@@ -5,4 +5,6 @@
   roles:
     - common
     - ipa-client
+    - role: gss-proxy
+      krb_service: NONBOT
     - nonbot
