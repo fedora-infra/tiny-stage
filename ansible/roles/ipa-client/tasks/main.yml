@@ -5,6 +5,13 @@
       - ipa-client
     state: present
 
+- name: Install python-certifi
+  dnf:
+    name:
+      - python3-certifi
+    state: present
+  when: "python_exec in ('python', 'python3')"
+
 - name: Enroll system as IPA client
   shell: |
     ipa-client-install \

@@ -1,0 +1,9 @@
+krb_service: HTTP
+krb_host_fqdn: "{{ ansible_fqdn }}"
+keytab_directory: /etc
+keytab_path: "{{ keytab_directory }}/{{ krb_service }}.keytab"
+keytab_owner: root
+keytab_group: root
+ipa_admin_user: admin
+ipa_admin_password: password
+krb_realm: "{{ ansible_domain | upper }}"

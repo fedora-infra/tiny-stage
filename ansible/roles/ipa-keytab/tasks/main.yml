@@ -1,0 +1,28 @@
+---
+- name: kinit
+  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+
+- name: Create the service in IPA
+  command: ipa service-add --force {{ krb_service | upper }}/{{ krb_host_fqdn }}
+  register: service_add_result
+  changed_when: "'Added service' in service_add_result.stdout"
+  failed_when: "not ('Added service' in service_add_result.stdout or 'already exists' in service_add_result.stderr)"
+
+- name: Allow the host to manage the virtual service
+  shell: ipa service-add-host --hosts={{ ansible_fqdn }} {{ krb_service | upper }}/{{ krb_host_fqdn }}
+  when: krb_host_fqdn != ansible_fqdn
+  register: result
+  changed_when: '"Number of members added 1" in result.stdout'
+  failed_when: '(ansible_fqdn + ": This entry is already a member") not in result.stdout and result.rc != 0'
+
+- name: Get service keytab
+  shell: ipa-getkeytab -p {{ krb_service | upper }}/{{ krb_host_fqdn }}@{{ krb_realm }} -k {{ keytab_path }}
+  args:
+    creates: "{{ keytab_path }}"
+
+- name: Set the correct permissions on keytab
+  file:
+    path: "{{ keytab_path }}"
+    owner: "{{ keytab_owner }}"
+    group: "{{ keytab_group }}"
+    mode: 0640

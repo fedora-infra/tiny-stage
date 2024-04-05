@@ -37,7 +37,7 @@
   lineinfile:
     path: /etc/krb5.conf
     insertafter: 'default_ccache_name.*'
-    line: '  default_client_keytab_name = FILE:/etc/httpd/conf/http.keytab'
+    line: '  default_client_keytab_name = FILE:{{ keytab_path }}'
 
 - name: redirect to https
   copy:

@@ -11,29 +11,15 @@
   changed_when: '"Number of members added 1" in result.stdout'
   failed_when: '(ansible_fqdn + ": This entry is already a member") not in result.stdout and result.rc != 0'
 
-- name: Create the service in IPA
-  shell: ipa service-add HTTP/{{ vhost }} --force
-  register: result
-  changed_when: '"Added service" in result.stdout'
-  failed_when: '" already exists" not in result.stderr and result.rc != 0'
-
-- name: Allow the host to manage the service
-  shell: ipa service-add-host --hosts={{ ansible_fqdn }} HTTP/{{ vhost }}
-  register: result
-  changed_when: '"Number of members added 1" in result.stdout'
-  failed_when: '(ansible_fqdn + ": This entry is already a member") not in result.stdout and result.rc != 0'
-
-- name: Get service keytab for Apache
-  shell: ipa-getkeytab -p HTTP/{{ vhost }} -k /etc/httpd/conf/{{ app_name }}.keytab
-  args:
-    creates: /etc/httpd/conf/{{ app_name }}.keytab
-
-- name: Set the correct permissions on keytab
-  file:
-    path: /etc/httpd/conf/{{ app_name }}.keytab
-    owner: apache
-    group: apache
-    mode: 0640
+- name: Get the keytab
+  import_role:
+    name: ipa-keytab
+  vars:
+    krb_service: HTTP
+    krb_host_fqdn: "{{ vhost }}"
+    keytab_path: /etc/httpd/conf/{{ app_name }}.keytab
+    keytab_owner: apache
+    keytab_group: apache
 
 - name: Create the SSL certificate
   import_role:
