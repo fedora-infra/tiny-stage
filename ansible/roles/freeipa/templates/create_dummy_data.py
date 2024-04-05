@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+from contextlib import suppress, contextmanager
+
 from faker import Faker
 
 import python_freeipa
@@ -14,6 +17,16 @@ def rando(percentage):
         return True
     else:
         return False
+
+@contextmanager
+def handle_already_a_member():
+    try:
+        yield
+    except python_freeipa.exceptions.ValidationError as e:
+        if e.args[0]["member"]["user"][0][1] == "This entry is already a member":
+            pass
+        else:
+            raise
 
 
 groups = {
@@ -38,16 +51,19 @@ untouched_ipa = python_freeipa.ClientLegacy(
 
 agreement_name = "FPCA"
 group_name = f"signed_{agreement_name}"
-ipa._request("fasagreement_add", agreement_name, {"description": f"This is the {agreement_name} agreement"})
-ipa.group_add(group_name, f"Signers of the {agreement_name}")
-ipa._request("automember_add", group_name, {"type":"group"})
-ipa._request("automember_add_condition", group_name, {"type":"group", "key":"memberof", "automemberinclusiveregex":f"^cn={agreement_name},cn=fasagreements,"})
+with suppress(python_freeipa.exceptions.DuplicateEntry):
+    ipa._request("fasagreement_add", agreement_name, {"description": f"This is the {agreement_name} agreement"})
+    ipa.group_add(group_name, f"Signers of the {agreement_name}")
+    ipa._request("automember_add", group_name, {"type":"group"})
+    ipa._request("automember_add_condition", group_name, {"type":"group", "key":"memberof", "automemberinclusiveregex":f"^cn={agreement_name},cn=fasagreements,"})
 
 for group in groups.keys():
-    ipa.group_add(group, f"A group for {group}", fasgroup=True)
-    ipa._request("fasagreement_add_group", agreement_name, {"group": group})
+    with suppress(python_freeipa.exceptions.DuplicateEntry):
+        ipa.group_add(group, f"A group for {group}", fasgroup=True)
+        ipa._request("fasagreement_add_group", agreement_name, {"group": group})
 
-ipa.group_add("general", f"A group for general stuff", fasgroup=True)
+with suppress(python_freeipa.exceptions.DuplicateEntry):
+    ipa.group_add("general", f"A group for general stuff", fasgroup=True)
 
 
 for x in range(100):
@@ -56,7 +72,7 @@ for x in range(100):
     username = firstName + lastName
     fullname = firstName + " " + lastName
     print(f"adding user {username} - {fullname}")
-    try:
+    with suppress(python_freeipa.exceptions.DuplicateEntry):
         ipa.user_add(
             username,
             firstName,
@@ -75,6 +91,7 @@ for x in range(100):
             username, new_password=USER_PASSWORD, old_password=USER_PASSWORD
         )
 
+    with handle_already_a_member():
         has_signed_fpca = False
         if rando(90):
             ipa._request("fasagreement_add_user", "FPCA", {"user": username})
@@ -82,15 +99,13 @@ for x in range(100):
         else:
             ipa.group_add_member("general", username)
 
-        # add to groups
-        for groupname, chance in groups.items():
-            if rando(chance) and has_signed_fpca:
+    # add to groups
+    for groupname, chance in groups.items():
+        if rando(chance) and has_signed_fpca:
+            with handle_already_a_member():
                 ipa.group_add_member(groupname, username)
                 # add member manager (sponsor)
                 if rando(30):
                     ipa._request(
                         "group_add_member_manager", groupname, {"user": username}
                     )
-
-    except python_freeipa.exceptions.FreeIPAError as e:
-        print(e)
