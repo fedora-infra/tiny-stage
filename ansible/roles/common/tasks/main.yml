@@ -1,12 +1,4 @@
 ---
-# try to enable epel -- this will fail on Fedora Machines, but just ignore it
-# we need epel here for nonbot
-- name: Enable EPEL
-  dnf:
-      name: ['epel-release']
-      state: present
-  when: ansible_distribution != "Fedora"
-
 - name: Install common packages
   dnf:
     name:

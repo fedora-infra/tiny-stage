@@ -19,7 +19,6 @@ machines = {
   "elections": {},
   "mirrormanager2": {},
   "ipaclient": {},
-  "nonbot":{"operatingsystem": "centos8"},
   "tinystage": {
     "autostart": true,
   },
@@ -45,13 +44,8 @@ Vagrant.configure(2) do |config|
     synced_folder = mdef.fetch(:synced_folder, "/vagrant")
     mdef.delete(:synced_folder)
     config.vm.define mname, autostart: autostart do |machine|
-      if operatingsystem == 'centos8'
-        config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.4.2105-20210603.0.x86_64.vagrant-libvirt.box"
-        config.vm.box = "centos84-cloud-libvirt"
-      else
-        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-38-1.6.x86_64.vagrant-libvirt.box"
-        machine.vm.box = "f38-cloud-libvirt"
-      end
+      machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-38-1.6.x86_64.vagrant-libvirt.box"
+      machine.vm.box = "f38-cloud-libvirt"
       machine.vm.hostname = "#{mname}.#{domain}"
 
       libvirt_def = {
