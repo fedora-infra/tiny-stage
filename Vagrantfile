@@ -44,8 +44,8 @@ Vagrant.configure(2) do |config|
     synced_folder = mdef.fetch(:synced_folder, "/vagrant")
     mdef.delete(:synced_folder)
     config.vm.define mname, autostart: autostart do |machine|
-      machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-38-1.6.x86_64.vagrant-libvirt.box"
-      machine.vm.box = "f38-cloud-libvirt"
+      machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/39/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-39-1.5.x86_64.vagrant-libvirt.box"
+      machine.vm.box = "f39-cloud-libvirt"
       machine.vm.hostname = "#{mname}.#{domain}"
 
       libvirt_def = {
