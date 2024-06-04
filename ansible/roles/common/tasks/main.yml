@@ -7,6 +7,7 @@
     - vim-enhanced
     - python3
     - fedora-messaging
+    - git
     state: present
 
 - name: Determine Python version
@@ -41,3 +42,7 @@
     path: /etc/fedora-messaging/config.toml
     regexp: "amqp_url = \"amqp://\""
     line: "amqp_url = \"amqp://fedoramessages:fedoramessages@tinystage.tinystage.test\"" # gitleaks:allow
+
+- name: set git to ignore safety warnings added in git 2.36 https://github.blog/2022-04-18-highlights-from-git-2-36/#stricter-repository-ownership-checks 
+  command: git config --global --add safe.directory '*'
+  become_user: vagrant
