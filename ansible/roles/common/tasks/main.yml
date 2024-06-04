@@ -61,3 +61,4 @@
     
 - name: set git to ignore safety warnings added in git 2.36 https://github.blog/2022-04-18-highlights-from-git-2-36/#stricter-repository-ownership-checks 
   command: git config --global --add safe.directory '*'
+  become_user: vagrant
