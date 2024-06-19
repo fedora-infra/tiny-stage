@@ -41,3 +41,10 @@
     path: /etc/fedora-messaging/config.toml
     regexp: "amqp_url = \"amqp://\""
     line: "amqp_url = \"amqp://fedoramessages:fedoramessages@tinystage.tinystage.test\"" # gitleaks:allow
+
+# Without this, vagrant sshfs can fail when there are many vagrant VMs running at the same time
+- name: allow more auth tries in sshd
+  copy:
+    src: 10-vagrant-maxauthtries.conf
+    dest: /etc/ssh/sshd_config.d/60-vagrant-maxauthtries.conf
+    mode: 0644
