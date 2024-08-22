@@ -1,4 +1,10 @@
 ---
+- name: Install RPM packages
+  dnf:
+    name:
+      - krb5-workstation
+    state: present
+
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
 
