@@ -5,6 +5,7 @@
     - bash-completion
     - tmux
     - vim-enhanced
+    - git
     - python3
     - fedora-messaging
     state: present
@@ -47,4 +48,12 @@
   copy:
     src: 10-vagrant-maxauthtries.conf
     dest: /etc/ssh/sshd_config.d/60-vagrant-maxauthtries.conf
+    mode: 0644
+
+- name: Install the synced-folder systemd unit file
+  copy:
+    src: synced-folder@.service
+    dest: /etc/systemd/system/synced-folder@.service
+    owner: root
+    group: root
     mode: 0644
