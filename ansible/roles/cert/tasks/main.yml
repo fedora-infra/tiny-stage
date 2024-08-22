@@ -1,7 +1,5 @@
-
-
 - name: Generate and get SSL cert
-  shell: ipa-getcert request -f /etc/pki/tls/certs/{{ cert_basename }}.pem -k /etc/pki/tls/private/{{ cert_basename }}.key -K {{ krb_service }}/{{ cert_hostname }} -N {{ cert_hostname }}
+  shell: ipa-getcert request -f /etc/pki/tls/certs/{{ cert_basename }}.pem -k /etc/pki/tls/private/{{ cert_basename }}.key -K {{ krb_service }}/{{ cert_hostname }} -N {{ cert_hostname }} -O {{ cert_owner }} -o {{ cert_owner }}
   args:
     creates: /etc/pki/tls/certs/{{ cert_basename }}.pem
 
