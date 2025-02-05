@@ -95,6 +95,39 @@ Tiny Stage populates the IPA database with many users, and for ease of use, they
 
 ## Seeing users and Groups in the IPA admin webUI
 
-Since it's your tinystage, you have access to the IPA WebUI as admin. got to https://ipa.tinystage.test/ and log in with the username `admin` and the password `password` and you can view all the users and groups, and change any details.
+Since it's your tinystage, you have access to the IPA WebUI as admin. Go to https://ipa.tinystage.test/ and log in with the username `admin` and the password `password` and you can view all the users and groups, and change any details.
 ![image](https://user-images.githubusercontent.com/592259/122032526-11025c80-ce13-11eb-9a21-66c9047c232e.png)
+
+## Access to ipalib's API
+
+No need to start all the VMs, the `ipa` one is enough:
+
+```
+vagrant up ipa
+vagrant ssh ipa
+```
+
+The ipalib API is accessible from the python console. It's necessary to pass envvars KRB5_CONFIG and IPA_CONFDIR:
+
+```
+KRB5_CONFIG=krb5.conf IPA_CONFDIR=<path_to>/synced_folders/ipa/ipa ipython
+```
+
+Inside the console initialize API access:
+```
+from ipalib import api
+api.bootstrap(context="custom")
+api.finalize()
+```
+Create a connection:
+
+```
+api.Backend.rpcclient.connect()
+```
+
+Run the ipalib API commads:
+```
+api.Command.user_find()
+```
+More information in the freeipa guide: https://freeipa.readthedocs.io/en/latest/api/basic_usage.html
 
