@@ -61,11 +61,19 @@
   args:
     creates: /var/lib/ipa/backup/backup-clean
 
-- name: copy the CA cert to the vagrant dir
+- name: Create the ipa dir in synced_folders
+  file:
+    path: /vagrant/ipa
+    state: directory
+
+- name: copy the IPA files to the vagrant dir
   copy:
     remote_src: true
-    src: /etc/ipa/ca.crt
-    dest: /vagrant/ca.crt
+    src: /etc/ipa/{{item}}
+    dest: /vagrant/ipa/{{item}}
+  loop:
+    - ca.crt
+    - default.conf
 
 - name: Install the bashrc
   template:
