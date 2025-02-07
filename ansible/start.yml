@@ -1,0 +1,4 @@
+---
+- import_playbook: rabbitmq.yml
+- import_playbook: ipa.yml
+- import_playbook: ipsilon.yml

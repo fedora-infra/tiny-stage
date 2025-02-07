@@ -1,0 +1,68 @@
+- name: Start Podman socket
+  systemd_service:
+    scope: user
+    name: podman.socket
+    state: started
+
+- name: Prepare the resolved config dir
+  become: yes
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Resolve the domain
+  become: yes
+  template:
+    src: resolved.conf
+    dest: /etc/systemd/resolved.conf.d/tinystage.conf
+  notify:
+    - reload systemd-resolved
+
+- name: Build the DNSMasq image
+  containers.podman.podman_image:
+    name: tinystage-dnsmasq
+    path: "{{ playbook_dir }}/../build/dnsmasq"
+    state: build
+
+- name: Run DNSMasq
+  containers.podman.podman_container:
+    name: tinystage-dnsmasq
+    hostname: "dnsmasq.{{ domain }}"
+    image: tinystage-dnsmasq
+    network: tinystage
+    publish:
+      - "8053:53"
+      - "8053:53/udp"
+    label:
+      traefik.enable: false
+
+- name: Allow binding ports 80 and up as a regular user
+  become: yes
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_unprivileged_port_start
+    value: 80
+    state: present
+
+- name: Run Traefik
+  containers.podman.podman_container:
+    name: tinystage-{{ container_name }}
+    hostname: "{{ container_name }}.{{ domain }}"
+    image: docker.io/library/traefik:latest
+    volume:
+      - /run/user/{{ ansible_user_uid }}/podman/podman.sock:/var/run/docker.sock:z
+    publish:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    network: tinystage
+    # Necessary to talk to the podman socket 
+    security_opt: label=type:container_runtime_t
+    command:
+      - --providers.docker=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443

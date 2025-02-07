@@ -1,0 +1,3 @@
+ipa.tinystage.test ansible_connection=containers.podman.podman ansible_host=tinystage-ipa
+rabbitmq.tinystage.test ansible_connection=containers.podman.podman ansible_host=tinystage-rabbitmq
+ipsilon.tinystage.test ansible_connection=containers.podman.podman ansible_host=tinystage-ipsilon

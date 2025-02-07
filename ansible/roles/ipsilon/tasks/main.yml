@@ -1,145 +1,143 @@
----
-- name: Install RPM packages
-  dnf:
-    # enablerepo: updates-testing
-    name:
-      - ipsilon
-      - ipsilon-tools-ipa
-      - ipsilon-saml2
-      - ipsilon-openid
-      - ipsilon-openidc
-      - ipsilon-authgssapi
-      - ipsilon-authpam
-      - ipsilon-infofas
-      - ipsilon-theme-Fedora
-      - httpd
-      - krb5-workstation
-      - fasjson-client
-      - sqlite
-      - openssl
-      - git
-      - patch
-    state: present
-
-- name: Install the bashrc
-  copy:
-    src: bashrc
-    dest: /etc/profile.d/vagrant-ipsilon.sh
-    mode: 0644
-    owner: root
-    group: root
-
-- name: Download Fedora-specific code
-  git:
-    repo: https://pagure.io/fedora-infra/ipsilon-fedora.git
-    dest: /opt/ipsilon-fedora
-    force: yes
-
-- name: Install Fedora-specific code
-  command:
-    cmd: ./install.sh
-    chdir: /opt/ipsilon-fedora
-    creates: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
-
-- name: install ipsilon
-  command:
-    cmd:  ipsilon-server-install
-          --ipa=yes
-          --secure no
-          --server-debugging
-          --admin-user={{ ipa_admin_user }}
-          --openidc=yes
-          --openid=yes
-          --saml2=yes
-          --gssapi=yes
-          --gssapi-httpd-keytab=/etc/httpd/conf/ipsilon.keytab
-          --pam=yes
-          --info-sssd=yes
-    creates: /etc/ipsilon/idp/ipsilon.conf
-
-- name: overwrite ipsilon configuration
-  copy:
-    src: "ipsilon.conf"
-    dest: "/etc/ipsilon/idp/ipsilon.conf"
-    owner: ipsilon
-    group: ipsilon
-    mode: 0600
-
-- name: kinit for Ipsilon
-  shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
-
-- name: Create the vhost in IPA
-  import_role:
-    name: ipa-vhost
-  vars:
-    app_name: ipsilon
-
-# the configuration.conf template uses this to populate
-# the openidc keyid
-- name: get openidc key
-  ansible.builtin.slurp:
-    src: /var/lib/ipsilon/idp/openidc/openidc.key
-  register: openidckey
-
-- name: copy ipsilon admin configuration
-  template:
-    src: "configuration.conf"
-    dest: "/etc/ipsilon/idp/configuration.conf"
-    owner: ipsilon
-    group: ipsilon
-    mode: 0600
-
-- name: Tune SELinux Policy
-  seboolean:
-    name: "{{ item }}"
-    state: yes
-    persistent: yes
-  with_items:
-    - httpd_can_connect_ldap
-    - httpd_can_network_connect
-    - httpd_use_fusefs
-
-- name: Copy the Apache config
-  template:
-    src: httpd.conf
-    dest: /etc/ipsilon/idp/idp.conf
-  notify:
-    - restart httpd
-
-- name: Set ipsilon theme to fedora
-  lineinfile:
-    path: /etc/ipsilon/idp/ipsilon.conf
-    insertafter: 'template_dir = "templates"'
-    line: 'theme_dir = "/usr/share/ipsilon/themes/Fedora"'
-
-- name: Set CORS
-  copy:
-    src: cors.conf
-    dest: /etc/httpd/conf.d/cors.conf
-
-- name: Allow apache to access the public directory
+- name: Create the data and conf directories
+  delegate_to: localhost
   file:
-    path: /var/lib/ipsilon/idp
-    group: apache
-    mode: g+x
+    path: "{{ data_dir }}/{{ item }}"
     state: directory
+  loop:
+    - data
+    - conf
+    - conf/ipsilon
+    - conf/certs
 
-- name: Allow access to the public directory
-  file:
-    path: /var/lib/ipsilon/idp/public
-    mode: a+rX
-    state: directory
-    recurse: yes
+- name: Check if the keytab already exists
+  delegate_to: localhost
+  stat:
+    path: "{{ data_top_dir }}/ipa/keytabs/ipsilon.keytab"
+  register: keytab_file
 
-- name: Make IPA's cert available publicly
+- block:
+    - name: kinit
+      shell: echo "{{ ipa_admin_password }}" | kinit admin@{{ krb_realm }}
+
+    - name: Create the host in IPA
+      command: ipa host-add {{ fqdn }} --force
+      register: output
+      changed_when: "'already exists' not in output.stderr"
+      failed_when: "'already exists' not in output.stderr and output.rc != 0"
+
+    - name: Create the service in IPA
+#       delegate_to: localhost
+#       connection: local
+#       containers.podman.podman_container_exec:
+#         name: tinystage-ipa
+#         command: ipa service-add HTTP/{{ fqdn }} --force
+      command: ipa service-add HTTP/{{ fqdn }} --force
+      register: output
+      changed_when: "'already exists' not in output.stderr"
+      failed_when: "'already exists' not in output.stderr and output.rc != 0"
+
+    - name: Allow the IPA host to manage the new service
+      command: ipa service-add-host --hosts=ipa.tinystage.test HTTP/{{ fqdn }}
+      register: output
+      changed_when: "'already exists' not in output.stderr"
+      failed_when: "'already exists' not in output.stderr and output.rc != 0"
+
+      # ipa role-add-member --hosts=web.example.com certadmin
+
+    - name: Create the keytabs directory
+      delegate_to: localhost
+      file:
+        path: "{{ data_top_dir }}/ipa/keytabs"
+        state: directory
+
+    - name: Get a keytab
+      command: ipa-getkeytab -p HTTP/{{ fqdn }} -k /data/keytabs/ipsilon.keytab
+
+    - name: kdestroy
+      command: kdestroy -A
+
+  delegate_to: ipa.tinystage.test
+  when: not keytab_file.stat.exists
+
+- name: Move the keytab to the ipsilon data dir
+  delegate_to: localhost
+  connection: local
   copy:
-    src: /etc/ipa/ca.crt
-    dest: /var/www/html/ca.crt
-    remote_src: yes
+    remote_src: true
+    src: "{{ data_top_dir }}/ipa/keytabs/ipsilon.keytab"
+    dest: "{{ data_dir }}/conf/ipsilon.keytab"
 
-- name: Enable and restart Apache
-  systemd:
-    state: restarted
-    name: httpd
-    enabled: yes
-    daemon_reload: yes
+
+- name: Check if the certificate already exists
+  delegate_to: localhost
+  stat:
+    path: "{{ data_dir }}/conf/certs/httpd.crt"
+  register: cert_file
+
+- block:
+    - name: kinit
+      shell: echo "{{ ipa_admin_password }}" | kinit admin@{{ krb_realm }}
+
+    - name: Get a certificate
+      import_role:
+        name: cert
+      vars:
+        cert_basename: ipsilon
+        cert_hostname: "{{ fqdn }}"
+        cert_owner: admin
+        krb_service: HTTP
+
+    - name: kdestroy
+      command: kdestroy -A
+
+  delegate_to: ipa.tinystage.test
+  when: not cert_file.stat.exists
+
+- name: Move the cert & key to the ipsilon data dir
+  delegate_to: localhost
+  connection: local
+  copy:
+    remote_src: true
+    src: "{{ data_top_dir }}/ipa/etc/pki/tls/certs/{{ item.src }}"
+    dest: "{{ data_dir }}/conf/certs/{{ item.dest }}"
+  loop:
+    - src: ipsilon.pem
+      dest: httpd.crt
+    - src: ipsilon.key
+      dest: httpd.key
+
+# - name: Run or install the container
+#   delegate_to: localhost
+#   connection: local
+#   containers.podman.podman_container:
+#     name: tinystage-{{ container_name }}
+#     hostname: "{{ container_name }}.{{ domain }}"
+#     image: ipsilon:latest
+#     state: started
+
+- name: Build the Ipsilon image
+  delegate_to: localhost
+  connection: local
+  containers.podman.podman_image:
+    name: tinystage-{{ container_name }}
+    path: "{{ playbook_dir }}/../build/{{ container_name }}"
+    state: build
+
+- name: Run Ipsilon
+  delegate_to: localhost
+  connection: local
+  containers.podman.podman_container:
+    name: tinystage-{{ container_name }}
+    hostname: "{{ container_name }}.{{ domain }}"
+    image: tinystage-{{ container_name }}
+    volume:
+      - "{{ data_dir }}/data:/data:Z"
+      - "{{ data_dir }}/conf:/conf:Z"
+    network: tinystage
+    env:
+      IPA_ADMIN_PASSWORD: "{{ ipa_admin_password }}"
+    label:
+      traefik.enable: true
+      traefik.http.routers.ipsilon.rule: "Host(`{{ fqdn }}`)"
+      traefik.http.services.ipsilon.loadbalancer.server.port: 80
+      traefik.http.services.ipsilon.loadbalancer.server.port: 443

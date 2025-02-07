@@ -1,0 +1,7 @@
+- name: reload NetworkManager
+  command: nmcli g reload
+
+- name: reload systemd-resolved
+  systemd_service:
+    name: systemd-resolved
+    state: reloaded

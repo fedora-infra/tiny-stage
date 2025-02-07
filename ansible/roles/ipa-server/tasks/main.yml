@@ -1,0 +1,88 @@
+- name: Create the data directory
+  delegate_to: localhost
+  file:
+    path: "{{ playbook_dir }}/../data/{{ container_name }}"
+    state: directory
+
+- name: Build the FreeIPA image
+  delegate_to: localhost
+  connection: local
+  containers.podman.podman_image:
+    name: tinystage-{{ container_name }}
+    path: "{{ playbook_dir }}/../build/{{ container_name }}"
+    state: build
+
+- name: Run or install FreeIPA
+  delegate_to: localhost
+  connection: local
+  containers.podman.podman_container:
+    name: tinystage-{{ container_name }}
+    hostname: "{{ container_name }}.{{ domain }}"
+    image: tinystage-{{ container_name }}
+    volume:
+      - "{{ playbook_dir }}/../data/{{ container_name }}:/data:Z"
+    network: tinystage
+    env:
+      IPA_SERVER_INSTALL_OPTS: "-a {{ ipa_admin_password }} -r {{ krb_realm }} -p {{ krb_master_password }} -n {{ domain }} -U --no-ntp --subject 'O={{ krb_realm }} {{ now(utc=true, fmt='%Y-%m-%d %H%M') }}'"
+      # IPA_SERVER_INSTALL_OPTS: "-a {{ ipa_admin_password }} -r {{ krb_realm }} -p {{ krb_master_password }} -n {{ domain }} -U --no-ntp --dns=127.0.0.1 --no-host-dns --subject 'O={{ krb_realm }} {{ now(utc=true, fmt='%Y-%m-%d %H:%M:%S') }}'"
+    label:
+      traefik.enable: true
+      traefik.http.routers.ipa.rule: "Host(`{{ fqdn }}`)"
+      traefik.http.services.ipa.loadbalancer.server.port: 80
+      traefik.http.services.ipa.loadbalancer.server.port: 443
+
+- name: Wait for the install to finish
+  ansible.builtin.wait_for:
+    path: /etc/systemd/system/container-ipa.target.wants/ipa-server-configure-first.service
+    state: absent
+
+- name: Wait for IPA to be ready
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    state: started
+  loop:
+    - 389
+    - 88
+    - 8080  # Tomcat
+
+# - name: upgrade IPA for freeipa-fas
+#   command: ipa-server-upgrade
+
+# - name: get freeipa-fas
+#   git:
+#     repo: https://github.com/fedora-infra/freeipa-fas.git
+#     dest: /opt/freeipa-fas
+# 
+# - name: install freeipa-fas
+#   command: ./install.sh
+#   args:
+#     chdir: /opt/freeipa-fas/
+#     creates: /usr/share/ipa/schema.d/89-fasschema.ldif
+
+- name: kinit for IPA
+  shell: echo "{{ ipa_admin_password }}" | kinit admin@{{ krb_realm }}
+
+- name: Remove the admin account's expiration date
+  command: ipa user-mod admin --setattr krbPasswordExpiration=
+  register: ipa_user_mod_result
+  changed_when: "ipa_user_mod_result.rc == 0"
+  failed_when: >-
+    ipa_user_mod_result.rc != 0
+    and ipa_user_mod_result.stderr != "ipa: ERROR: no modifications to be performed"
+
+- name: kdestroy
+  command: kdestroy -A
+
+- name: create backup of clean FreeIPA server data
+  shell: |
+    ipa-backup
+    # ipa-backup creates the backup with a datetime in the dirname. Here
+    # we just copy it to *-clean so we can reference it easier in the
+    # bash alias.
+    mv /data/var/lib/ipa/backup/ipa-full* /data/var/lib/ipa/backup/backup-clean
+  args:
+    creates: /data/var/lib/ipa/backup/backup-clean
+
+- name: Create dummy data
+  import_role:
+    name: ipa-server-populate

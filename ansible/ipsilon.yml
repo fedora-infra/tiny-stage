@@ -1,9 +1,8 @@
 ---
-- hosts: ipsilon
-  become: true
-  become_method: sudo
+- hosts: ipsilon.tinystage.test
+  gather_facts: no
+  vars_files:
+    - vars.yml
+
   roles:
-    - common
-    - ipa-client
-    - cert
-    - ipsilon
+    - role: ipsilon

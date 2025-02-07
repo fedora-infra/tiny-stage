@@ -1,0 +1,15 @@
+- hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Stop containers
+      containers.podman.podman_container:
+        name: tinystage-{{ item }}
+        state: absent
+      loop:
+        - ipa
+        - ipsilon
+        - rabbitmq
+        - proxy

@@ -1,0 +1,22 @@
+FROM quay.io/freeipa/freeipa-server:fedora-41
+
+ARG hostname=ipa.tinystage.test
+
+# For DNF: restore the certificates directories
+RUN for dir in ca-trust tls/certs; do ln -sf /data-template/etc/pki/${dir} /etc/pki/${dir}; done
+
+RUN dnf install -y \
+	python3-libdnf5 \
+	git \
+	vim \
+	python-freeipa \
+	python-faker
+
+# FreeIPA-FAS
+RUN \
+	git clone https://github.com/fedora-infra/freeipa-fas.git /opt/freeipa-fas && \
+	cd /opt/freeipa-fas && \
+	./install.sh --copy-only
+
+# Undo restoration
+RUN for dir in ca-trust tls/certs; do ln -sf /data/etc/pki/${dir} /etc/pki/${dir}; done

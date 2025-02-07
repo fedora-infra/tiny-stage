@@ -1,0 +1,7 @@
+ipa_admin_user: admin
+ipa_admin_password: password
+krb_master_password: password
+domain: tinystage.test
+krb_realm: "{{ domain | upper }}"
+#network: 192.168.125.0
+data_top_dir: "{{ playbook_dir }}/../data"

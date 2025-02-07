@@ -1,0 +1,53 @@
+diff -up ./httpd.conf.orig ./httpd.conf
+--- ./conf/httpd.conf.orig	2024-09-05 15:22:27.868824456 +0200
++++ ./conf/httpd.conf	2024-09-05 15:26:36.733031404 +0200
+@@ -184,7 +184,7 @@ DocumentRoot "/var/www/html"
+ # logged here.  If you *do* define an error logfile for a <VirtualHost>
+ # container, that host's errors will be logged there and not here.
+ #
+-ErrorLog "logs/error_log"
++ErrorLog "/proc/self/fd/1"
+ 
+ #
+ # LogLevel: Control the number of messages logged to the error_log.
+@@ -219,7 +219,7 @@ LogLevel warn
+     # If you prefer a logfile with access, agent, and referer information
+     # (Combined Logfile Format) you can use the following directive.
+     #
+-    CustomLog "logs/access_log" combined
++    CustomLog "/proc/self/fd/1" combined
+ </IfModule>
+ 
+ <IfModule alias_module>
+diff -up ./ssl.conf.orig ./ssl.conf
+--- ./conf.d/ssl.conf.orig	2024-09-05 15:28:01.545782221 +0200
++++ ./conf.d/ssl.conf	2024-09-05 15:28:58.238282908 +0200
+@@ -61,8 +61,8 @@ SSLCryptoDevice builtin
+ 
+ # Use separate log files for the SSL virtual host; note that LogLevel
+ # is not inherited from httpd.conf.
+-ErrorLog logs/ssl_error_log
+-TransferLog logs/ssl_access_log
++ErrorLog /proc/self/fd/1
++TransferLog /proc/self/fd/1
+ LogLevel warn
+ 
+ #   SSL Engine Switch:
+@@ -98,7 +98,7 @@ SSLProxyCipherSuite PROFILE=SYSTEM
+ #   Some ECC cipher suites (http://www.ietf.org/rfc/rfc4492.txt)
+ #   require an ECC certificate which can also be configured in
+ #   parallel.
+-SSLCertificateFile /etc/pki/tls/certs/localhost.crt
++SSLCertificateFile /conf/certs/httpd.crt
+ 
+ #   Server Private Key:
+ #   If the key is not combined with the certificate, use this
+@@ -106,7 +106,7 @@ SSLCertificateFile /etc/pki/tls/certs/lo
+ #   you've both a RSA and a DSA private key you can configure
+ #   both in parallel (to also allow the use of DSA ciphers, etc.)
+ #   ECC keys, when in use, can also be configured in parallel
+-SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
++SSLCertificateKeyFile /conf/certs/httpd.key
+ 
+ #   Server Certificate Chain:
+ #   Point SSLCertificateChainFile at a file containing the

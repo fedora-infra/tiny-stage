@@ -1,0 +1,9 @@
+---
+- hosts: rabbitmq.tinystage.test
+  gather_facts: no
+  vars_files:
+    - vars.yml
+
+  roles:
+    - role: rabbitmq
+      container_name: rabbitmq

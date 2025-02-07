@@ -1,0 +1,10 @@
+- name: copy the create data script
+  template:
+      src: create_dummy_data.py
+      dest: /data/create_dummy_data.py
+      mode: 0644
+
+- name: create dummy data
+  shell: python3 /data/create_dummy_data.py > /data/var/log/dummy-data.log
+  args:
+    creates: /data/var/log/dummy-data.log
