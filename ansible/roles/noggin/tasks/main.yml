@@ -31,6 +31,11 @@
     target: "/srv(/.*)?"
     setype: httpd_sys_content_t
 
+- name: Allow apache to execute binary python libraries
+  sefcontext:
+    target: "/home/vagrant/.cache/pypoetry/virtualenvs/.*\\.so"
+    setype: httpd_sys_script_exec_t
+
 # - name: Install Noggin with Pip
 #   pip:
 #     name:
@@ -89,6 +94,14 @@
 #   command:
 #     cmd: pybabel compile -d /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations
 #     creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
+
+- name: Create the log directory
+  file:
+    path: /var/log/noggin
+    state: directory
+    owner: apache
+    group: apache
+    mode: 0755
 
 - name: Tune SELinux Policy
   seboolean:
