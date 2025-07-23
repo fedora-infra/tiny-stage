@@ -57,6 +57,8 @@
           --info-sssd=yes
     creates: /etc/ipsilon/idp/ipsilon.conf
 
+- import_tasks: patches.yml
+
 - name: overwrite ipsilon configuration
   copy:
     src: "ipsilon.conf"

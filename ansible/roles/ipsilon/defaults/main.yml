@@ -1,1 +1,3 @@
 vhost: ipsilon.{{ ansible_domain }}
+ipsilon_patches:
+  - b885a3286bea111dccaff6c0182bd80a6c347f92
