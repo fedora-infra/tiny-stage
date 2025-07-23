@@ -6,6 +6,8 @@
 from __future__ import print_function, unicode_literals, absolute_import
 
 import os
+import hashlib
+import datetime
 import pygit2
 
 import tests
@@ -22,6 +24,9 @@ userslist = []
 
 from fasjson_client import Client
 c = Client('https://fasjson.tinystage.test/fasjson', principal='admin@TINYSTAGE.TEST')
+
+def sha1(data):
+    return hashlib.sha1(data.encode("utf-8")).hexdigest()
 
 def create_projects_git(folder, project):
     repo_path = os.path.join(folder, f'{project}')
@@ -101,7 +106,7 @@ def insert_data(session):
             parent_id=None,
             description=f"{project} {namespace}",
             namespace=namespace,
-            hook_token=f"{project} {namespace}"
+            hook_token=sha1(f"{project} {namespace}"),
         )
         p.close_status = ["Invalid", "Insufficient data", "Fixed", "Duplicate"]
         try:
@@ -137,7 +142,7 @@ def insert_data(session):
             parent_id=None,
             description=f"{project} rpm",
             namespace='rpms',
-            hook_token=f"{project} rpm"
+            hook_token=sha1(f"{project} rpm"),
         )
         p.close_status = ["Invalid", "Insufficient data", "Fixed", "Duplicate"]
         try:
@@ -170,3 +175,5 @@ if __name__ == "__main__":
         session = pagure.lib.query.create_session(_config["DB_URL"])
 
     insert_data(session)
+    with open("dev-data-done", "w") as f:
+        f.write(datetime.datetime.now().isoformat())

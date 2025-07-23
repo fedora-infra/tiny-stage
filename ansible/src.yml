@@ -7,4 +7,5 @@
     - common
     - ipa-client
     - cert
+    - postgresql
     - src

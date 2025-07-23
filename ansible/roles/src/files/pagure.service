@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/home/vagrant/pagure
-ExecStart=python3 /home/vagrant/pagure/runserver.py --host 0.0.0.0 --port 80 --debug --config /home/vagrant/pagure/lcl/pagure.cfg
+ExecStart=python3 /home/vagrant/pagure/runserver.py --host 0.0.0.0 --port 80 --debug --config /home/vagrant/pagure.cfg
 Type=simple
 
 [Install]

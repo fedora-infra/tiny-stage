@@ -56,16 +56,24 @@
 - name: copy pagure.cfg
   copy:
     src: pagure.cfg
-    dest: /home/vagrant/pagure/lcl/pagure.cfg
+    dest: /home/vagrant/pagure.cfg
 
 
-- name: wipe database
-  file:
-    path: /var/tmp/pagure_dev.sqlite
-    state: absent
+- name: Add a pagure postgres user
+  postgresql_user:
+    name: pagure
+    role_attr_flags: SUPERUSER,LOGIN
+    password: pagure
+
+
+- name: Create a database for pagure
+  postgresql_db:
+    name: pagure
+    owner: pagure
+
 
 - name: create database
-  command: python createdb.py --initial alembic.ini
+  command: python createdb.py --config /home/vagrant/pagure.cfg --initial alembic.ini
   args:
     chdir: /home/vagrant/pagure/
 
@@ -109,8 +117,10 @@
     dest: /home/vagrant/pagure/dev-data.py
 
 - name: create data
-  command: python dev-data.py
+  command:
+    cmd: python dev-data.py
+    chdir: /home/vagrant/pagure/
+    creates: /home/vagrant/pagure/dev-data-done
   environment:
     REQUESTS_CA_BUNDLE: /etc/pki/tls/certs/ca-bundle.crt
-  args:
-    chdir: /home/vagrant/pagure/
+    PAGURE_CONFIG: /home/vagrant/pagure.cfg
