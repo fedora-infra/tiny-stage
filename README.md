@@ -89,6 +89,19 @@ $ echo password | KRB5_CONFIG=krb5.conf kinit admin
 $ KRB5_CONFIG=krb5.conf curl --cacert ./synced_folders/ipa/ca.crt -u : --negotiate https://fasjson.tinystage.test/fasjson/v1/me/
 ```
 
+### HTTPS
+
+The web UIs are using IPA's certificate, you need to trust the certificate. In Firefox, just browse to one of the web interfaces, such as [Ipsilon](https://ipsilon.tinystage.test), and accept the certificate.
+In Chromium, you have two options. Option 1 is to add the certificate on the system:
+
+```
+$ sudo cp synced_folders/ipa/ca.crt /etc/pki/ca-trust/source/anchors/tinystage.pem
+$ sudo update-ca-trust 
+```
+
+and restart Chromium. Option 2 is to go to `chrome://certificate-manager/localcerts/usercerts`, click "Import", browse to your `tiny-stage/synced_folders/ipa/ca.crt` file and import it.
+
+
 ## Users and Passwords
 
 Tiny Stage populates the IPA database with many users, and for ease of use, they all have `password` as the password.
