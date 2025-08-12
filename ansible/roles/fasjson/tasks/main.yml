@@ -20,6 +20,7 @@
       - "@Development Tools"
       - vim
       - tmux
+      - python3-libselinux
     state: present
 
 - name: Allow apache to see /srv
