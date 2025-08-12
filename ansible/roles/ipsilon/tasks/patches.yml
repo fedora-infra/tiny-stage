@@ -18,7 +18,7 @@
 
 - name: Apply patches
   ansible.builtin.shell:
-    chdir: "{{ ansible_facts['python3']['sitelib'] }}"
+    chdir: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages
     cmd: filterdiff --include '?/ipsilon/*' /opt/ipsilon-patches/{{item}}.patch | patch -p1 --forward --fuzz=0 --reject-file=- --batch
   loop: "{{ ipsilon_patches }}"
   register: result
