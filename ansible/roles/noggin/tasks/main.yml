@@ -26,13 +26,17 @@
       - babel
       state: present
 
+- name: Install dep to change SELinux file contexts and booleans
+  dnf:
+    name: python3-libselinux
+
 - name: Allow apache to see /srv
-  sefcontext:
+  community.general.sefcontext:
     target: "/srv(/.*)?"
     setype: httpd_sys_content_t
 
 - name: Allow apache to execute binary python libraries
-  sefcontext:
+  community.general.sefcontext:
     target: "/home/vagrant/.cache/pypoetry/virtualenvs/.*\\.so"
     setype: httpd_sys_script_exec_t
 

@@ -20,11 +20,14 @@
       - "@Development Tools"
       - vim
       - tmux
-      - python3-libselinux
     state: present
 
+- name: Install dep to change SELinux file contexts and booleans
+  dnf:
+    name: python3-libselinux
+
 - name: Allow apache to see /srv
-  sefcontext:
+  community.general.sefcontext:
     target: "/srv(/.*)?"
     setype: httpd_sys_content_t
 
