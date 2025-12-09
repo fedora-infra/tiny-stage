@@ -136,7 +136,7 @@
 
 - name: Allow apache to modify files in /run/fasjson
   community.general.sefcontext:
-    target: '/var/run/fasjson(/.*)?'
+    target: '/run/fasjson(/.*)?'
     setype: httpd_var_run_t
     state: present
 
