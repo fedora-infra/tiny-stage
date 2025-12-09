@@ -139,6 +139,11 @@
     dest: /var/www/html/ca.crt
     remote_src: yes
 
+- name: add the alias to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "127.0.1.2 ipsilon.tinystage.test ipsilon"
+
 - name: Enable and restart Apache
   systemd:
     state: restarted
