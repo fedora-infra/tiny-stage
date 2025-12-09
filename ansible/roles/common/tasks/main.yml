@@ -1,4 +1,13 @@
 ---
+- name: Copy the disk resize script
+  copy:
+    src: resize-disk.sh
+    dest: /root/resize-disk.sh
+    mode: "755"
+
+- name: Resize the disk
+  command: /root/resize-disk.sh
+
 - name: Install common packages
   dnf:
     name:

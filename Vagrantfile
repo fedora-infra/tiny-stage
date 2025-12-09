@@ -15,6 +15,7 @@ machines = {
     "hostmanager.aliases": ["fasjson", "ipsilon"],
     "autostart": true,
     "libvirt.memory": 1536,
+    "libvirt.machine_virtual_size": 10,
   },
   "elections": {},
   "mirrormanager2": {},
