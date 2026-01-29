@@ -3,6 +3,8 @@
       name: "{{ item }}"
       state: present
   with_items:
+      - checkpolicy
+      - policycoreutils-python-utils
       - rabbitmq-server
       - fedora-messaging
 
