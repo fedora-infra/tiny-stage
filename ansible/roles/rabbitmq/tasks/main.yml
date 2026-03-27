@@ -7,6 +7,7 @@
       - policycoreutils-python-utils
       - rabbitmq-server
       - fedora-messaging
+      - checkpolicy
 
 # SELinux
 - name: copy policy module
@@ -54,6 +55,17 @@
     name: rabbitmq-server
     state: started
     enabled: yes
+
+- name: Get the version
+  command:
+    cmd: rabbitmqctl version
+  register: _rabbitmq_version
+  changed_when: False
+
+- name: Set the plugins dir in rabbitmq's env file
+  lineinfile:
+    path: /etc/rabbitmq/rabbitmq-env.conf
+    line: "PLUGINS_DIR=/usr/lib/rabbitmq/lib/rabbitmq_server-{{ _rabbitmq_version.stdout }}/plugins"
 
 - name: Enables the rabbitmq management and SSL authentication plugins
   rabbitmq_plugin:
