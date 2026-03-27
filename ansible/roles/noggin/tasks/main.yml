@@ -10,27 +10,8 @@
       - poetry
       - python3-cryptography
       - python3-devel
-      - python3-flask
       - python3-pip
-      - python3-whitenoise
-      - python3-backoff
-      - python3-email-validator
-      - python3-flask-mail
-      - python3-flask-talisman
-      - python3-flask-wtf
-      - python3-jwt
-      - python3-pyotp
-      - python3-wtforms
-      - python3-flask-babel
-      - python3-babel
-      - babel
       state: present
-
-
-# - name: Install Noggin with Pip
-#   pip:
-#     name:
-#       - noggin-aaa
 
 - name: get noggin
   git:
@@ -81,10 +62,13 @@
   notify:
     - restart httpd
 
-# - name: compile the translations
-#   command:
-#     cmd: pybabel compile -d /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations
-#     creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
+- name: compile the translations
+  command:
+    cmd: poetry run pybabel compile -d ./noggin/translations
+    chdir: /vagrant/noggin
+    creates: /vagrant/noggin/noggin/translations/fr_FR/LC_MESSAGES/messages.mo
+  become: True
+  become_user: vagrant
 
 - name: Create the log directory
   file:
@@ -94,6 +78,15 @@
     group: apache
     mode: 0755
 
+- name: Allow apache to log to Noggin's log dir
+  community.general.sefcontext:
+    target: "/var/log/noggin(/.*)?"
+    setype: httpd_log_t
+
+- name: Apply new SELinux file context to Noggin's log dir
+  ansible.builtin.command: restorecon -irv /var/log/noggin
+  register: restorecon_result
+  changed_when: restorecon_result.stdout != ""
 
 - name: Copy configs for Apache
   template:
