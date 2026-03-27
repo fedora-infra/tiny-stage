@@ -22,15 +22,6 @@
       - tmux
     state: present
 
-- name: Install dep to change SELinux file contexts and booleans
-  dnf:
-    name: python3-libselinux
-
-- name: Allow apache to see /srv
-  community.general.sefcontext:
-    target: "/srv(/.*)?"
-    setype: httpd_sys_content_t
-
 - name: Install fasjson with Pip
   pip:
     name:
@@ -56,6 +47,7 @@
 
 - name: kinit for FASJSON
   shell: echo {{ ipa_admin_password }} | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+  changed_when: False
 
 - name: Create the vhost in IPA
   import_role:

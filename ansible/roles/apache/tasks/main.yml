@@ -11,6 +11,7 @@
 
 - name: kinit for Apache
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+  changed_when: False
 
 - name: Get the certificates
   import_role:
@@ -44,3 +45,41 @@
     src: redirect-to-ssl.conf
     dest: /etc/httpd/conf.d/redirect-to-ssl.conf
   notify: restart httpd
+
+- name: Tune SELinux Policy
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_network_connect
+    - httpd_read_user_content
+  notify:
+    - restart httpd
+
+- name: Allow apache to see /srv
+  community.general.sefcontext:
+    target: "/srv(/.*)?"
+    setype: httpd_sys_content_t
+
+- name: Allow apache to execute binary python libraries
+  community.general.sefcontext:
+    target: "/home/vagrant/.cache/pypoetry/virtualenvs/.*\\.so"
+    setype: httpd_sys_script_exec_t
+
+- name: Allow apache to execute binary python libraries
+  community.general.sefcontext:
+    target: "/home/vagrant/.cache/pypoetry/virtualenvs/.*\\.so"
+    setype: httpd_sys_script_exec_t
+
+- name: Apply new SELinux file context to the poetry virtualenvs
+  ansible.builtin.command: restorecon -irv /home/vagrant/.cache/pypoetry/virtualenvs
+  register: restorecon_result
+  changed_when: restorecon_result.stdout != ""
+
+- name: Enable and restart Apache
+  systemd:
+    state: restarted
+    name: httpd
+    enabled: yes
+    daemon_reload: yes

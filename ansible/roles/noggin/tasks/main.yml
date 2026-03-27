@@ -26,19 +26,6 @@
       - babel
       state: present
 
-- name: Install dep to change SELinux file contexts and booleans
-  dnf:
-    name: python3-libselinux
-
-- name: Allow apache to see /srv
-  community.general.sefcontext:
-    target: "/srv(/.*)?"
-    setype: httpd_sys_content_t
-
-- name: Allow apache to execute binary python libraries
-  community.general.sefcontext:
-    target: "/home/vagrant/.cache/pypoetry/virtualenvs/.*\\.so"
-    setype: httpd_sys_script_exec_t
 
 # - name: Install Noggin with Pip
 #   pip:
@@ -56,20 +43,20 @@
   shell: poetry install
   become: True
   become_user: vagrant
+  register: poetry_output
+  changed_when: "'No dependencies to install or update' not in poetry_output.stdout"
   args:
     chdir: /vagrant/noggin
 
 - name: stuff noggin virtualenv into a variable
-  shell: 
+  shell:
     cmd: poetry env info -p
   become: True
   become_user: vagrant
   register: poetry_virtualenv_path
+  changed_when: False
   args:
     chdir: /vagrant/noggin
-
-- name: Turn off SELinux
-  command: setenforce 0
 
 - name: Install the bashrc
   copy:
@@ -107,16 +94,6 @@
     group: apache
     mode: 0755
 
-- name: Tune SELinux Policy
-  seboolean:
-    name: "{{ item }}"
-    state: yes
-    persistent: yes
-  with_items:
-    - httpd_can_network_connect
-    - httpd_read_user_content
-  notify:
-    - restart httpd
 
 - name: Copy configs for Apache
   template:

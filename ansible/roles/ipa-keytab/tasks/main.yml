@@ -7,6 +7,7 @@
 
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+  changed_when: False
 
 - name: Create the service in IPA
   command: ipa service-add --force {{ krb_service | upper }}/{{ krb_host_fqdn }}

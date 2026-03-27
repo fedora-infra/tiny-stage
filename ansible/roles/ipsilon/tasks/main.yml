@@ -69,6 +69,7 @@
 
 - name: kinit for Ipsilon
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
+  changed_when: False
 
 - name: Create the vhost in IPA
   import_role:
