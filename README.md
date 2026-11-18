@@ -40,7 +40,7 @@ Then run vagrant to create the 3 default machines (ipa, auth, tinystage):
 $ vagrant up
 ```
 
-This process will take a while, but when complete you will then be able to access the 4 default machines.
+This process will take a while, but when complete you will then be able to access the 3 default machines.
 
 To create a non default machine, simply run the vagrant up command with the name of the machine. For example, to create the elections application, run the command:
 
