@@ -12,7 +12,7 @@
 
 - name: Download patches
   ansible.builtin.get_url: 
-    url: https://pagure.io/ipsilon/c/{{item}}.patch
+    url: https://forge.fedoraproject.org/apps/ipsilon/commit/{{item}}.patch
     dest: /opt/ipsilon-patches/{{item}}.patch
   loop: "{{ ipsilon_patches }}"
 
